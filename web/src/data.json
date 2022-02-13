@@ -1,0 +1,41 @@
+{
+    "players": [
+        "Michal 1",
+        "Michal 2",
+        "Michal 3",
+        "Michal 4",
+        "Michal 5",
+        "Michal 6",
+        "Michal 7"
+    ],
+    "deck": [
+        2,
+        4,
+        8,
+        16,
+        24,
+        32,
+        40,
+        48,
+        64,
+        72,
+        80
+    ],
+    "stories": [
+        {
+            "name": "Story 1",
+            "description" : "Some nice description",
+            "points": 0
+        },
+        {
+            "name": "Story 2",
+            "description" : "Some nice description",
+            "points": 0
+        },
+        {
+            "name": "Story 3",
+            "description" : "Some nice description",
+            "points": 0
+        }
+    ]
+}

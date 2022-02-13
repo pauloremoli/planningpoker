@@ -1,0 +1,51 @@
+version: '3'
+
+services:
+  redis:
+    image: redis
+    ports:
+    - 6379:6379
+    
+    networks: 
+      - webnet
+    environment:
+      REDIS_PASS_FILE: /run/secrets/redis_password
+    command: [
+      "bash", "-c",
+      '
+       docker-entrypoint.sh
+       --requirepass "$$(cat $$REDIS_PASS_FILE)"
+      '
+    ]
+    secrets:
+      - redis_password
+
+  server:
+    image: planning-poker-server:1.0.0-prod
+    ports:
+      - "4000:4000"
+    networks:
+      - webnet
+    environment:
+      REDIS_HOST: redis
+      APPLICATION_URL: http://localhost:3000
+      REDIS_SECRET: redisi%Ww##nkjrkljascjbva
+      SESSION_SECRET: IJABGAknknsf$$21sadk
+      APP_PORT: 4000
+  client:
+    image: planning-poker-client:1.0.0-prod
+    build:
+      context: .
+      dockerfile:
+        Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      REACT_APP_SERVER_URL: http://localhost:3000
+
+secrets:
+  redis_password:
+    file: ./redis_password.txt
+    
+networks:
+  webnet:
