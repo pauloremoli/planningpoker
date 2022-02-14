@@ -1,4 +1,4 @@
-import React, { useReducer } from "react";
+import React, { useReducer, useState } from "react";
 
 interface CardProps {
     value: string | null;
@@ -17,11 +17,9 @@ const Card: React.FC<CardProps> = ({
     isSelected,
     selectionEnabled = true,
 }) => {
-    const [isFlipped, flip] = useReducer((isFlipped) => !isFlipped, flipped);
-
     let cardColor = "bg-blue-600";
 
-    if (!isFlipped) {
+    if (!flipped) {
         cardColor = value ? "bg-green-700" : "bg-gray-200";
     }
     if (isSelected) {
@@ -39,7 +37,7 @@ const Card: React.FC<CardProps> = ({
             } text-3xl justify-center  p-2 items-center`}
             onClick={selectionEnabled ? setSelected : () => {}}
         >
-            {isFlipped ? value : ""}
+            {flipped ? value : ""}
         </button>
     );
 };

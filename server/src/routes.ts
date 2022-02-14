@@ -46,7 +46,7 @@ app.get("/room/", async (req, res) => {
         });
 });
 
-app.post("/createRoom", jsonParser, (req, res) => {
+app.post("/createRoom", jsonParser, async (req, res) => {
     console.log("Received request on /createRoom with params: ", req.body);
 
     if (!req.body.deck || req.body.deck.length === 0) {
@@ -65,7 +65,7 @@ app.post("/createRoom", jsonParser, (req, res) => {
         playedCards: [],
     };
 
-    redis.set(
+    await redis.set(
         ROOM_KEY + roomId,
         JSON.stringify(room),
         "ex",

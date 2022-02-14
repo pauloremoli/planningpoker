@@ -6,12 +6,17 @@ import CreateStory from "./CreateStory";
 import Adapter from "@wojtekmaj/enzyme-adapter-react-17";
 import { configure, mount } from "enzyme";
 import AppProvider from "./AppContext";
+import { MemoryRouter } from "react-router-dom";
 
 configure({ adapter: new Adapter() });
 
 test("renders sidebar stories", () => {
     const [firstStory, ...others] = data.stories;
-    render(<Sidebar stories={data.stories} roomOwner={false} />);
+    render(
+        <MemoryRouter>
+            <Sidebar stories={data.stories} roomOwner={false} />
+        </MemoryRouter>
+    );
 
     const votingNowElement = screen.getByText("Voting now:");
     expect(votingNowElement).toBeInTheDocument();
@@ -29,7 +34,9 @@ test("renders sidebar stories", () => {
 test("click on Add Story button renders CreateStory component", async () => {
     let wrapper = mount(
         <AppProvider username={""} userId={""}>
-            <Sidebar stories={data.stories} roomOwner={true} />
+            <MemoryRouter>
+                <Sidebar stories={data.stories} roomOwner={true} />
+            </MemoryRouter>
         </AppProvider>
     );
 
