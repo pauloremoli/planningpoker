@@ -5,8 +5,8 @@ type Room = {
     roomId: string;
     deck: string[];
     stories: Story[];
-    players: string[];
     roomOwner: string;
+    flippedCards: boolean;
     playedCards: PlayedCard[];
 }
 

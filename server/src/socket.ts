@@ -5,33 +5,30 @@ import PlayedCard from "./models/PlayedCard";
 import Room from "./models/Room";
 import redisClient from "./redis";
 
+type User = {
+    socket: Socket;
+    username: string;
+};
+
 const rooms = new Map<string, string[]>();
+let allPlayers: User[] = [];
 
 const socket = ({ io }: { io: Server }) => {
     console.log(`Sockets enabled`);
 
-    let allPlayers: Socket[] = [];
-
     io.on(EVENTS.connection, (socket: Socket) => {
         console.log(`User connected ${socket.id}`);
-        allPlayers.push(socket);
+        allPlayers.push({ socket, username: "" });
 
-        socket.on(EVENTS.disconnect, () => {
-            console.log("User disconnected: ", socket.id);
-
-            allPlayers = allPlayers.filter(
-                (playerSocket) => playerSocket !== socket
-            );
-            rooms.forEach((room, value) => {
-                console.log(value);
-
-                return (room = room.filter((player) => player !== socket.id));
+        io.on("disconnect", () => {
+            console.log("user disconnected");
+            rooms.forEach((value) => {
+                value = value.filter((user) => user !== socket.id);
             });
-            console.log(rooms);
         });
 
-        /*disconnect
-         * When a user creates a new room
+        /*
+         * Create a new room
          */
         socket.on(EVENTS.CLIENT.CREATE_ROOM, ({ roomId, userId }) => {
             console.log("Socket: create room: ", roomId);
@@ -43,15 +40,15 @@ const socket = ({ io }: { io: Server }) => {
         });
 
         /*
-         * When a user sends a room messageroomId broadcast it to other players in the room
+         * When a user sends a message it's broadcasted to other players in the room
          */
 
         socket.on(
             EVENTS.CLIENT.SEND_ROOM_MESSAGE,
-            ({ roomId, message, username }) => {
+            (roomId, message, username) => {
                 const date = new Date();
 
-                socket.to(roomId).emit(EVENTS.SERVER.ROOM_MESSAGE, {
+                socket.broadcast.to(roomId).emit(EVENTS.SERVER.ROOM_MESSAGE, {
                     message,
                     username,
                     time: `${date.getHours()}:${date.getMinutes()}`,
@@ -62,25 +59,45 @@ const socket = ({ io }: { io: Server }) => {
         /*
          * When a user joins a room
          */
-        socket.on(EVENTS.CLIENT.JOIN_ROOM, (roomId, userId) => {
-            console.log(`User(${userId}) joined room ${roomId}`);
-
+        socket.on(EVENTS.CLIENT.JOIN_ROOM, (roomId, username) => {
             if (!rooms.has(roomId)) {
                 console.log("Room id not found ", roomId);
 
-                socket.emit(EVENTS.SERVER.ROOM_CLOSED, roomId);
+                socket.broadcast
+                    .to(roomId)
+                    .emit(EVENTS.SERVER.ROOM_CLOSED, roomId);
 
                 return;
             }
+            console.log("EVENTS.CLIENT.JOIN_ROOM", roomId, username);
 
-            let players = rooms.get(roomId);
-            players?.push(userId);
-
-            rooms.set(roomId, players!);
+            allPlayers = allPlayers.map((user: User) => {
+                return { socket: user.socket, username };
+            });
 
             socket.join(roomId);
 
-            socket.emit(EVENTS.SERVER.JOINED_ROOM, roomId, userId);
+            redisClient.get(ROOM_KEY + roomId).then(async (data) => {
+                if (!data) {
+                    socket.broadcast
+                        .to(roomId)
+                        .emit(EVENTS.SERVER.ROOM_CLOSED, roomId);
+                    return;
+                }
+
+                const roomData: Room = JSON.parse(data);
+                roomData.playedCards.push({ player: username, card: "" });
+
+                await redisClient.set(
+                    ROOM_KEY + roomId,
+                    JSON.stringify(roomData),
+                    "ex",
+                    1000 * 60 * 60 * 24 * 1
+                ); // 1 day
+
+                console.log(roomData);
+                socket.emit(EVENTS.SERVER.JOINED_ROOM, roomData);
+            });
         });
 
         /*
@@ -92,7 +109,9 @@ const socket = ({ io }: { io: Server }) => {
             if (!rooms.has(roomId)) {
                 console.log("Room id not found ", roomId);
 
-                socket.emit(EVENTS.SERVER.ROOM_CLOSED, roomId);
+                socket.broadcast
+                    .to(roomId)
+                    .emit(EVENTS.SERVER.ROOM_CLOSED, roomId);
 
                 return;
             }
@@ -117,11 +136,48 @@ const socket = ({ io }: { io: Server }) => {
                     1000 * 60 * 60 * 24 * 1
                 ); // 1 day
 
-                socket.emit(
-                    EVENTS.SERVER.SELECTED_CARD,
-                    roomId,
-                    roomData.playedCards
-                );
+                console.log("socket.broadcast.emit SELECTED_CARD");
+                console.log(rooms);
+                socket.broadcast
+                    .to(roomId)
+                    .emit(
+                        EVENTS.SERVER.SELECTED_CARD,
+                        roomId,
+                        roomData.playedCards
+                    );
+            });
+        });
+
+        /*
+         * User selected a card
+         */
+        socket.on(EVENTS.CLIENT.FLIP_CARDS, (roomId, flipped) => {
+            console.log(`Cards flipped`, flipped);
+
+            if (!rooms.has(roomId)) {
+                console.log("Room id not found ", roomId);
+
+                socket.broadcast.emit(EVENTS.SERVER.ROOM_CLOSED, roomId);
+
+                return;
+            }
+
+            redisClient.get(ROOM_KEY + roomId).then(async (data) => {
+                if (!data) {
+                    console.error(`Room id (${roomId}) not found`);
+                    return;
+                }
+                const roomData: Room = JSON.parse(data);
+
+                roomData.flippedCards = flipped;
+                await redisClient.set(
+                    ROOM_KEY + roomId,
+                    JSON.stringify(roomData),
+                    "ex",
+                    1000 * 60 * 60 * 24 * 1
+                ); // 1 day
+
+                socket.broadcast.emit(EVENTS.SERVER.FLIP_CARDS, roomId);
             });
         });
     });

@@ -4,9 +4,7 @@ import SERVER from "./constants";
 export async function post<T>(url: string, params: any): Promise<T> {
     
     return await axios.post(SERVER + url, params)
-        .then((response) => {
-            console.log(response.data);
-            
+        .then((response) => {            
             return response.data;
         })
         .catch((error) => {
@@ -20,7 +18,6 @@ export async function get<T>(url: string, params: any): Promise<T> {
 
     try {
         const response = await axios.get(SERVER + url, { params });
-        console.log(response.data);
         return response.data;
     } catch (error) {
         console.log("GET", error);

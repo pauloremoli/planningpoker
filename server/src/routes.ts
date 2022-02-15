@@ -60,7 +60,7 @@ app.post("/createRoom", jsonParser, async (req, res) => {
         roomId,
         deck: params.deck,
         roomOwner: params.roomOwner,
-        players: [params.roomOwner],
+        flippedCards: false,
         stories: [],
         playedCards: [],
     };

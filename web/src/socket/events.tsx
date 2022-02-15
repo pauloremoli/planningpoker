@@ -9,6 +9,7 @@ const EVENTS = {
         DELETE_STORY: "DELETE_STORY",
         SHOW_CARDS: "SHOW_CARDS",
         SELECTED_CARD: "SELECTED_CARD",
+        FLIP_CARDS: "FLIP_CARDS",
         RESET_CARDS: "RESET_CARDS",
         NEXT_STORY: "NEXT_STORY",
     },
@@ -18,7 +19,8 @@ const EVENTS = {
         JOINED_ROOM: "JOINED_ROOM",
         ROOM_MESSAGE: "ROOM_MESSAGE",
         NEW_STORY: "NEW_STORY",
-        SELECTED_CARD: "SELECTED_CARD"
+        SELECTED_CARD: "SELECTED_CARD",
+        FLIP_CARDS: "FLIP_CARDS"
     },
 };
 

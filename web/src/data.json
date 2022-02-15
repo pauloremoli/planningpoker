@@ -1,12 +1,8 @@
 {
-    "players": [
-        "Michal 1",
-        "Michal 2",
-        "Michal 3",
-        "Michal 4",
-        "Michal 5",
-        "Michal 6",
-        "Michal 7"
+    "playedCards": [
+        {"player": "Michal 1", "card": "20", "story": "Story 1"},
+        {"player": "Michal 2", "card": "40", "story": "Story 1"},
+        {"player": "Michal 3", "card": "80", "story": "Story 1"}
     ],
     "deck": [
         2,

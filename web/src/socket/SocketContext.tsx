@@ -15,7 +15,7 @@ interface Context {
     setMessages: Function;
 }
 
-const socket = io(SERVER, { forceNew: true });
+const socket = io(SERVER, { transports: ["websocket"], upgrade: false });
 
 const SocketContext = createContext<Context>({
     socket,
@@ -27,6 +27,26 @@ function SocketProvider(props: any) {
     const [messages, setMessages] = useState<Message[]>([]);
 
     useEffect(() => {
+        socket.on("connect", () => {
+            console.log("Connected: ", socket.id);
+        });
+
+        socket.on("disconnect", (reason) => {
+            console.log("Disconnected", reason);
+          });
+
+        socket.on(
+            EVENTS.SERVER.ROOM_MESSAGE,
+            ({ message, username, time }: Message) => {
+                console.log("ROOM_MESSAGE: ", message);
+
+                setMessages((messages: Message[]) => [
+                    ...messages,
+                    { message, username, time },
+                ]);
+            }
+        );
+
         socket.on(
             EVENTS.SERVER.ROOM_MESSAGE,
             ({ message, username, time }: Message) => {

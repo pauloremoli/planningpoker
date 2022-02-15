@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { post } from "../api/api";
 import { useAppContext } from "../components/AppContext";
@@ -19,9 +19,8 @@ const CreateRoom: React.FC = () => {
     const customValue = useInput("0, 1, 2, 4, 8, 16, 32, 64");
     const [hasError, setError] = useState("");
     let navigate = useNavigate();
-    const {setRoomId, roomId} = useAppContext();
+    const { setRoomId, roomId } = useAppContext();
     const { socket } = useSocket();
-
 
     const handleChangeDeck = (event: any) => {
         if (event.target.value === "custom") {
@@ -68,7 +67,10 @@ const CreateRoom: React.FC = () => {
                 setRoomId(roomId);
 
                 // emit room created event
-                socket.emit(EVENTS.CLIENT.CREATE_ROOM, { roomId, userId: socket.id });
+                socket.emit(EVENTS.CLIENT.CREATE_ROOM, {
+                    roomId,
+                    userId: socket.id,
+                });
 
                 navigate(`/room/?roomId=${roomId}`, { replace: true });
             })

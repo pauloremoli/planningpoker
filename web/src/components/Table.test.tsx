@@ -5,13 +5,14 @@ import Table from "./Table";
 
 import { configure } from "enzyme";
 import Adapter from "@wojtekmaj/enzyme-adapter-react-17";
+import PlayedCard from "../models/PlayedCard";
 
 configure({ adapter: new Adapter() });
 
 describe("Table tests", () => {
     test("renders control buttons when user is the room owner", () => {
         render(
-            <Table players={data.players} deck={data.deck} roomOwner={true} />
+            <Table playedCards={data.playedCards} deck={data.deck} roomOwner={true} />
         );
         const flipElement = screen.getByText("Flip");
         expect(flipElement).toBeInTheDocument();
@@ -23,7 +24,7 @@ describe("Table tests", () => {
 
     test("does not render control buttons when user is not room owner", () => {
         render(
-            <Table players={data.players} deck={data.deck} roomOwner={false} />
+            <Table playedCards={data.playedCards} deck={data.deck} roomOwner={false} />
         );
         const flipElement = screen.queryByText("Flip");
         expect(flipElement).toBeNull();
@@ -35,20 +36,20 @@ describe("Table tests", () => {
 
     test("renders players", () => {
         render(
-            <Table players={data.players} deck={data.deck} roomOwner={false} />
+            <Table playedCards={data.playedCards} deck={data.deck} roomOwner={false} />
         );
 
-        const players = data.players;
+        const playedCards = data.playedCards;
 
-        players.map((player: string) => {
-            const playerElement = screen.getByText(player);
+        playedCards.map((playedCard: PlayedCard) => {
+            const playerElement = screen.getByText(playedCard.player);
             expect(playerElement).toBeInTheDocument();
         });
     });
 
     test("renders cards", () => {
         render(
-            <Table players={data.players} deck={data.deck} roomOwner={false} />
+            <Table playedCards={data.playedCards} deck={data.deck} roomOwner={false} />
         );
 
         const cards = data.deck;
