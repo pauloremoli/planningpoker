@@ -18,7 +18,7 @@ const Table: React.FC<TableProps> = ({
     deck,
     roomOwner,
 }: TableProps) => {
-    const [isRoomOwner, setRoomOwner] = useState(false);
+    const [isRoomOwner, setRoomOwner] = useState(roomOwner);
     const [cards, setPlayedCards] = useState<PlayedCard[]>(playedCards);
     const [selectedCard, setSelectedCard] = useState("");
     const [isCardFlipped, flipCard] = useReducer(
@@ -26,45 +26,54 @@ const Table: React.FC<TableProps> = ({
         false
     );
     const { socket } = useSocket();
-    const { roomId } = useAppContext();
+    const { roomId, username, userId } = useAppContext();
 
-    socket.on(
-        EVENTS.SERVER.SELECTED_CARD,
-        (room: string, playedCards: PlayedCard[]) => {
-            console.log("SELECTED_CARD", playedCards);
-            if (roomId === room) {
-                setPlayedCards(playedCards);
-            }
-        }
-    );
+    useEffect(() => {
+        setRoomOwner(roomOwner);
+    }, [roomOwner]);
+
+    socket.on(EVENTS.SERVER.SELECTED_CARD, (playedCards: PlayedCard[]) => {
+        console.log("SELECTED_CARD", playedCards);
+        setPlayedCards(playedCards);
+    });
 
     socket.on(EVENTS.SERVER.FLIP_CARDS, (room: string) => {
-        if (roomId === room) {
-            flipCard();
-        }
+        flipCard();
     });
 
     const selectCard = (e: React.MouseEvent<HTMLElement>) => {
         let button = e.target as HTMLInputElement;
 
-        socket.emit(EVENTS.CLIENT.SELECTED_CARD, roomId, socket.id, button.id);
         setSelectedCard(button.id);
+        socket.emit(
+            EVENTS.CLIENT.SELECTED_CARD,
+            roomId,
+            userId,
+            username,
+            button.id
+        );
 
         const updatedCards: PlayedCard[] = cards.map((playedCard) => {
-            return playedCard.player === socket.id
+            return playedCard.username === username
                 ? {
-                      card: selectedCard,
-                      player: playedCard.player,
+                      card: button.id,
+                      username,
+                      userId,
                       story: playedCard.story,
                   }
                 : playedCard;
         });
+
+        console.log("Played cards: ", updatedCards);
+
         setPlayedCards(updatedCards);
     };
 
     useEffect(() => {
-        setRoomOwner(roomOwner);
-    }, [roomOwner]);
+        console.log("Played cards updated", playedCards);
+        
+        setPlayedCards(playedCards);
+    }, [playedCards]);
 
     useEffect(() => {
         return () => {
@@ -73,7 +82,8 @@ const Table: React.FC<TableProps> = ({
     }, []);
 
     const handleFlip = () => {
-        socket.emit(EVENTS.CLIENT.FLIP_CARDS, roomId, !isCardFlipped);
+        socket.emit(EVENTS.CLIENT.FLIP_CARDS, roomId);
+        flipCard();
     };
 
     return (
@@ -105,7 +115,7 @@ const Table: React.FC<TableProps> = ({
                                 className="m-8 mt-8 flex flex-col basis-20 items-center"
                             >
                                 <h3 key={"h1_player" + index}>
-                                    {playedCard.player}
+                                    {playedCard.username}
                                 </h3>
                                 <Card
                                     value={playedCard.card}

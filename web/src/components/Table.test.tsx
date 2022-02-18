@@ -42,7 +42,7 @@ describe("Table tests", () => {
         const playedCards = data.playedCards;
 
         playedCards.map((playedCard: PlayedCard) => {
-            const playerElement = screen.getByText(playedCard.player);
+            const playerElement = screen.getByText(playedCard.username);
             expect(playerElement).toBeInTheDocument();
         });
     });

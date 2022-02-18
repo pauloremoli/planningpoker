@@ -1,10 +1,10 @@
 import bodyParser from "body-parser";
 import express, { Router } from "express";
-import { v4 as uuidv4 } from "uuid";
+import { v4 } from "uuid";
 import { io } from "./app";
 import { ROOM_KEY } from "./constants";
-import EVENTS from "./models/Events";
-import Room from "./models/Room";
+import EVENTS from "./types/Events";
+import Room from "./types/Room";
 import redis from "./redis";
 
 const app = (module.exports = express());
@@ -53,13 +53,18 @@ app.post("/createRoom", jsonParser, async (req, res) => {
         return res.status(500).send({ error: "Parameter deck is required" });
     }
 
-    const roomId = uuidv4();
+    const roomId = v4();
     const params = req.body;
+
+    let userId = params.userId;
+    if (!userId) {
+        userId = v4();
+    }
 
     const room: Room = {
         roomId,
         deck: params.deck,
-        roomOwner: params.roomOwner,
+        roomOwner: userId,
         flippedCards: false,
         stories: [],
         playedCards: [],
@@ -72,7 +77,7 @@ app.post("/createRoom", jsonParser, async (req, res) => {
         1000 * 60 * 60 * 24 * 1
     ); // 1 day
 
-    return res.json({ roomId });
+    return res.json({ roomId, userId });
 });
 
 app.post("/addStory", jsonParser, (req, res) => {

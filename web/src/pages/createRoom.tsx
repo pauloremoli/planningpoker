@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { post } from "../api/api";
 import { useAppContext } from "../components/AppContext";
@@ -9,6 +9,7 @@ import { useSocket } from "../socket/SocketContext";
 
 export type RoomData = {
     roomId: string;
+    userId: string;
 };
 
 const CreateRoom: React.FC = () => {
@@ -19,7 +20,7 @@ const CreateRoom: React.FC = () => {
     const customValue = useInput("0, 1, 2, 4, 8, 16, 32, 64");
     const [hasError, setError] = useState("");
     let navigate = useNavigate();
-    const { setRoomId, roomId } = useAppContext();
+    const { setRoomId, userId, setUserId } = useAppContext();
     const { socket } = useSocket();
 
     const handleChangeDeck = (event: any) => {
@@ -59,17 +60,20 @@ const CreateRoom: React.FC = () => {
 
     const createNewRoom = async () => {
         setLoading(true);
-        const params = { deck: getDeckCards(), roomOwner: socket.id };
+        const params = { deck: getDeckCards(), userId };
 
         post<RoomData>("/createRoom", params)
             .then((data) => {
                 const roomId = data.roomId;
+                if (!userId) {
+                    setUserId(data.userId);
+                }
                 setRoomId(roomId);
 
                 // emit room created event
                 socket.emit(EVENTS.CLIENT.CREATE_ROOM, {
                     roomId,
-                    userId: socket.id,
+                    userId,
                 });
 
                 navigate(`/room/?roomId=${roomId}`, { replace: true });

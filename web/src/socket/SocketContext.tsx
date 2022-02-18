@@ -15,7 +15,7 @@ interface Context {
     setMessages: Function;
 }
 
-const socket = io(SERVER, { transports: ["websocket"], upgrade: false });
+const socket = io(SERVER, { autoConnect: false });
 
 const SocketContext = createContext<Context>({
     socket,
@@ -26,39 +26,33 @@ const SocketContext = createContext<Context>({
 function SocketProvider(props: any) {
     const [messages, setMessages] = useState<Message[]>([]);
 
-    useEffect(() => {
-        socket.on("connect", () => {
-            console.log("Connected: ", socket.id);
-        });
+    socket.onAny((event, ...args) => {
+        console.log(event, args);
+    });
 
-        socket.on("disconnect", (reason) => {
-            console.log("Disconnected", reason);
-          });
+    socket.on(
+        EVENTS.SERVER.ROOM_MESSAGE,
+        ({ message, username, time }: Message) => {
+            console.log("ROOM_MESSAGE: ", message);
 
-        socket.on(
-            EVENTS.SERVER.ROOM_MESSAGE,
-            ({ message, username, time }: Message) => {
-                console.log("ROOM_MESSAGE: ", message);
+            setMessages((messages: Message[]) => [
+                ...messages,
+                { message, username, time },
+            ]);
+        }
+    );
 
-                setMessages((messages: Message[]) => [
-                    ...messages,
-                    { message, username, time },
-                ]);
-            }
-        );
+    socket.on(
+        EVENTS.SERVER.ROOM_MESSAGE,
+        ({ message, username, time }: Message) => {
+            console.log("ROOM_MESSAGE: ", message);
 
-        socket.on(
-            EVENTS.SERVER.ROOM_MESSAGE,
-            ({ message, username, time }: Message) => {
-                console.log("ROOM_MESSAGE: ", message);
-
-                setMessages((messages: Message[]) => [
-                    ...messages,
-                    { message, username, time },
-                ]);
-            }
-        );
-    }, []);
+            setMessages((messages: Message[]) => [
+                ...messages,
+                { message, username, time },
+            ]);
+        }
+    );
 
     return (
         <SocketContext.Provider

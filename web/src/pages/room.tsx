@@ -11,19 +11,20 @@ import Modal from "react-modal";
 import UsernameForm from "../components/UsernameForm";
 
 const RoomPage: React.FC = () => {
-    const [isRoomOwner, setIsRoomOwner] = useState(true);
+    const [isRoomOwner, setIsRoomOwner] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
     const [isLoading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [data, setData] = useState<TRoom>();
     const { socket } = useSocket();
-    const { roomId, setRoomId, username, setUsername } = useAppContext();
+    const { roomId, setRoomId, username, setUsername, userId, setUserId } =
+        useAppContext();
     const [isRoomClosed, setIsRoomClosed] = useState(false);
     const [showUsernameForm, setShowUsernameForm] = useState(false);
 
     Modal.setAppElement(document.getElementById("root")!);
 
-    Modal!.defaultStyles!.overlay!.backgroundColor = "rgb(0, 0, 0, 0.75)";
+    Modal!.defaultStyles!.overlay!.backgroundColor = "rgb(15, 23, 42)";
 
     const customStyles = {
         content: {
@@ -43,40 +44,65 @@ const RoomPage: React.FC = () => {
         setIsRoomClosed(true);
     });
 
-    socket.on(EVENTS.SERVER.JOINED_ROOM, (roomData: TRoom) => {
-        if (roomData.roomId === roomId) {
-            console.log("New player joined: ", roomData);
-            setData(roomData);
-            setLoading(false);
+    socket.on(EVENTS.SERVER.JOINED_ROOM, (roomData: TRoom, userId: string) => {
+        console.log("EVENTS.SERVER.JOINED_ROOM: ", roomData, "UserId:", userId);
+
+        setData(roomData);
+        setLoading(false);
+        setUserId(userId);
+
+        console.log("Room owner:", roomData.roomOwner, " userId", userId);
+
+        if (roomData.roomOwner === userId) {
+            setIsRoomOwner(true);
+            console.log("Room owner:", true);
         }
     });
 
+    socket.on(
+        EVENTS.SERVER.PLAYER_JOINED_ROOM,
+        (roomData: TRoom, userId: string) => {
+            console.log(
+                "EVENTS.PLAYER_JOINED_ROOM: ",
+                roomData,
+                "UserId:",
+                userId
+            );
+            setData(roomData);
+        }
+    );
+
+    useEffect(() => {
+        if (!username) return;
+        socket.auth = { username };
+        socket.connect();
+
+        console.log("Username changed: ", username);
+        console.log(username, " just connected");
+        setShowUsernameForm(false);
+    }, [username]);
+
     useEffect(() => {
         setLoading(true);
-
-        if(!username)
-            return;
-
         const roomIdFromParams = searchParams.get("roomId");
         if (!roomIdFromParams) {
             setError("Room id not found");
-
             return;
         }
 
         console.log("EVENTS.CLIENT.JOIN_ROOM", username);
-        socket.emit(EVENTS.CLIENT.JOIN_ROOM, roomIdFromParams, username);
+        socket.emit(EVENTS.CLIENT.JOIN_ROOM, roomIdFromParams, userId);
 
         setRoomId(roomIdFromParams!);
-    }, [searchParams, setRoomId]);
-
-    
+    }, []);
 
     useEffect(() => {
         console.log("username:", username);
-        
-        setShowUsernameForm(!username);
-    }, [username]);
+
+        if (!username) {
+            setShowUsernameForm(true);
+        }
+    }, []);
 
     if (isRoomClosed) {
         return (
@@ -91,7 +117,7 @@ const RoomPage: React.FC = () => {
         );
     }
 
-    if (isLoading) {
+    if (username && isLoading) {
         return (
             <>
                 <div className="bg-slate-900  text-gray-100 flex w-screen h-screen justify-center items-center">
@@ -114,14 +140,22 @@ const RoomPage: React.FC = () => {
     return (
         <div className="bg-slate-900  text-gray-100 flex w-full">
             <>
-                <Sidebar stories={data!.stories} roomOwner={isRoomOwner} />
-                <Table
-                    playedCards={data!.playedCards}
-                    deck={data!.deck}
-                    roomOwner={isRoomOwner}
-                />
+                {!isLoading && (
+                    <>
+                        <Sidebar
+                            stories={data!.stories}
+                            roomOwner={isRoomOwner}
+                        />
+                        <Table
+                            playedCards={data!.playedCards}
+                            deck={data!.deck}
+                            roomOwner={isRoomOwner}
+                        />
 
-                <Chat />
+                        <Chat />
+                    </>
+                )}
+
                 <Modal isOpen={showUsernameForm} style={customStyles}>
                     <UsernameForm setUsername={setUsername} />
                 </Modal>

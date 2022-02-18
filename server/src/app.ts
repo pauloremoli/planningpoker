@@ -23,6 +23,15 @@ export const io = new Server(httpServer, {
     },
 });
 
+io.use((socket, next) => {
+    const username = socket.handshake.auth.username;
+    if (!username) {
+        return next(new Error("Invalid username"));
+    }
+    (socket as any).username = username;
+    next();
+});
+
 if (!APPLICATION_URL) throw error("Missing APPLICATION_URL configuration");
 
 app.use(

@@ -1,81 +1,117 @@
-import { Server, Socket } from "socket.io";
+import { Server } from "socket.io";
+import { v4 } from "uuid";
 import { ROOM_KEY } from "./constants";
-import EVENTS from "./models/Events";
-import PlayedCard from "./models/PlayedCard";
-import Room from "./models/Room";
+import EVENTS from "./types/Events";
+import PlayedCard from "./types/PlayedCard";
+import Room from "./types/Room";
 import redisClient from "./redis";
+import Socket from "./types/Socket";
 
-type User = {
+type Player = {
     socket: Socket;
-    username: string;
+    userId: string;
 };
 
-const rooms = new Map<string, string[]>();
-let allPlayers: User[] = [];
+const rooms = new Map<string, Player[]>();
+
+const addNewPlayerToRoom = async (
+    roomId: string,
+    socket: Socket,
+    userId: string,
+    roomData: Room
+) => {
+    const username = socket.username;
+
+    console.log(
+        "Adding new player to room: socketId(",
+        socket.id,
+        ") username(",
+        username,
+        "), userId (",
+        userId,
+        ")"
+    );
+
+    let players = rooms.get(roomId) || [];
+    players.push({ socket, userId });
+    rooms.set(roomId, players);
+
+    roomData.playedCards.push({ username, userId, card: "" });
+
+    await redisClient.set(
+        ROOM_KEY + roomData.roomId,
+        JSON.stringify(roomData),
+        "ex",
+        1000 * 60 * 60 * 24 * 1
+    ); // 1 day
+
+    socket.emit(EVENTS.SERVER.JOINED_ROOM, roomData, userId);
+};
+
+const isPlayerAlreadyInTheRoom = (
+    roomId: string,
+    socketId: string,
+    userId: string
+) => {
+    let players = rooms.get(roomId) || [];
+    const player = players.find(
+        (player: Player) =>
+            player.userId === userId || player.socket.id === socketId
+    );
+    return player ? true : false;
+};
+
+const updatePlayerInfo = (roomId: string, userId: string, socket: Socket) => {
+    console.log(
+        "Player is already in the room, udpating player info",
+        socket.username
+    );
+    const username = socket.username;
+    let players = rooms.get(roomId) || [];
+    players = players.map((user: Player) => {
+        return userId === user.userId ? { socket, userId, username } : user;
+    });
+
+    rooms.set(roomId, players);
+
+    console.log("Update room", rooms.get(roomId));
+};
+
 
 const socket = ({ io }: { io: Server }) => {
     console.log(`Sockets enabled`);
 
     io.on(EVENTS.connection, (socket: Socket) => {
-        console.log(`User connected ${socket.id}`);
-        allPlayers.push({ socket, username: "" });
-
         io.on("disconnect", () => {
-            console.log("user disconnected");
-            rooms.forEach((value) => {
-                value = value.filter((user) => user !== socket.id);
+            console.log("user disconnected", socket.id);
+            rooms.forEach((players) => {
+                players = players.filter(
+                    (player: Player) => player.socket.id !== socket.id
+                );
             });
-        });
 
-        /*
-         * Create a new room
-         */
-        socket.on(EVENTS.CLIENT.CREATE_ROOM, ({ roomId, userId }) => {
-            console.log("Socket: create room: ", roomId);
-            // create a roomId
-            // add a new room to the rooms object
-            rooms.set(roomId, [userId]);
-
-            socket.join(roomId);
+            console.log("Rooms", rooms);
         });
 
         /*
          * When a user sends a message it's broadcasted to other players in the room
          */
 
-        socket.on(
-            EVENTS.CLIENT.SEND_ROOM_MESSAGE,
-            (roomId, message, username) => {
-                const date = new Date();
+        socket.on(EVENTS.CLIENT.SEND_ROOM_MESSAGE, (roomId, message) => {
+            const date = new Date();
 
-                socket.broadcast.to(roomId).emit(EVENTS.SERVER.ROOM_MESSAGE, {
-                    message,
-                    username,
-                    time: `${date.getHours()}:${date.getMinutes()}`,
-                });
-            }
-        );
+            socket.broadcast.to(roomId).emit(EVENTS.SERVER.ROOM_MESSAGE, {
+                message,
+                username: socket.username,
+                time: `${date.getHours()}:${date.getMinutes()}`,
+            });
+        });
 
         /*
          * When a user joins a room
          */
-        socket.on(EVENTS.CLIENT.JOIN_ROOM, (roomId, username) => {
-            if (!rooms.has(roomId)) {
-                console.log("Room id not found ", roomId);
-
-                socket.broadcast
-                    .to(roomId)
-                    .emit(EVENTS.SERVER.ROOM_CLOSED, roomId);
-
-                return;
-            }
-            console.log("EVENTS.CLIENT.JOIN_ROOM", roomId, username);
-
-            allPlayers = allPlayers.map((user: User) => {
-                return { socket: user.socket, username };
-            });
-
-            socket.join(roomId);
+        socket.on(EVENTS.CLIENT.JOIN_ROOM, (roomId, userId) => {
+            console.log("EVENTS.CLIENT.JOIN_ROOM", roomId, socket.username);
 
             redisClient.get(ROOM_KEY + roomId).then(async (data) => {
                 if (!data) {
@@ -85,74 +121,84 @@ const socket = ({ io }: { io: Server }) => {
                     return;
                 }
 
+                socket.join(roomId);
                 const roomData: Room = JSON.parse(data);
-                roomData.playedCards.push({ player: username, card: "" });
 
-                await redisClient.set(
-                    ROOM_KEY + roomId,
-                    JSON.stringify(roomData),
-                    "ex",
-                    1000 * 60 * 60 * 24 * 1
-                ); // 1 day
+                if (!userId) {
+                    userId = v4();
+                    console.log("New userId generated:", userId);
+                }
 
-                console.log(roomData);
-                socket.emit(EVENTS.SERVER.JOINED_ROOM, roomData);
+                if (isPlayerAlreadyInTheRoom(roomId, socket.id, userId)) {
+                    updatePlayerInfo(roomId, userId, socket);
+                } else {
+                    addNewPlayerToRoom(roomId, socket, userId, roomData);
+                }
+
+                console.log(EVENTS.SERVER.JOINED_ROOM, userId);
+                socket.broadcast
+                    .to(roomId)
+                    .emit(EVENTS.SERVER.PLAYER_JOINED_ROOM, roomData, userId);
+                console.log("Rooms:", rooms);
             });
         });
 
         /*
          * User selected a card
          */
-        socket.on(EVENTS.CLIENT.SELECTED_CARD, async (roomId, userId, card) => {
-            console.log(`User ${userId} selected card ${card}`);
+        socket.on(
+            EVENTS.CLIENT.SELECTED_CARD,
+            async (roomId, userId, username, card) => {
+                console.log(`User ${username} selected card ${card}`);
 
-            if (!rooms.has(roomId)) {
-                console.log("Room id not found ", roomId);
+                if (!rooms.has(roomId)) {
+                    console.log("Room id not found ", roomId);
 
-                socket.broadcast
-                    .to(roomId)
-                    .emit(EVENTS.SERVER.ROOM_CLOSED, roomId);
+                    socket.broadcast
+                        .to(roomId)
+                        .emit(EVENTS.SERVER.ROOM_CLOSED, roomId);
 
-                return;
-            }
-
-            redisClient.get(ROOM_KEY + roomId).then(async (data) => {
-                if (!data) {
-                    console.error(`Room id (${roomId}) not found`);
                     return;
                 }
-                const roomData: Room = JSON.parse(data);
-                const playedCard: PlayedCard = { player: userId, card };
 
-                roomData.playedCards = roomData.playedCards.filter(
-                    (playedCard: PlayedCard) => playedCard.player !== userId
-                );
-                roomData.playedCards.push(playedCard);
+                redisClient.get(ROOM_KEY + roomId).then(async (data) => {
+                    if (!data) {
+                        console.error(`Room id (${roomId}) not found`);
+                        return;
+                    }
+                    const roomData: Room = JSON.parse(data);
+                    const playedCard: PlayedCard = { userId, username, card };
 
-                await redisClient.set(
-                    ROOM_KEY + roomId,
-                    JSON.stringify(roomData),
-                    "ex",
-                    1000 * 60 * 60 * 24 * 1
-                ); // 1 day
-
-                console.log("socket.broadcast.emit SELECTED_CARD");
-                console.log(rooms);
-                socket.broadcast
-                    .to(roomId)
-                    .emit(
-                        EVENTS.SERVER.SELECTED_CARD,
-                        roomId,
-                        roomData.playedCards
+                    roomData.playedCards = roomData.playedCards.filter(
+                        (playedCard: PlayedCard) =>
+                            playedCard.username !== username
                     );
-            });
-        });
+                    roomData.playedCards.push(playedCard);
+
+                    await redisClient.set(
+                        ROOM_KEY + roomId,
+                        JSON.stringify(roomData),
+                        "ex",
+                        1000 * 60 * 60 * 24 * 1
+                    ); // 1 day
+
+                    console.log("socket.broadcast.emit SELECTED_CARD");
+                    console.log(roomData.playedCards);
+                    socket.broadcast
+                        .to(roomId)
+                        .emit(
+                            EVENTS.SERVER.SELECTED_CARD,
+                            roomData.playedCards
+                        );
+                });
+            }
+        );
 
         /*
          * User selected a card
          */
-        socket.on(EVENTS.CLIENT.FLIP_CARDS, (roomId, flipped) => {
-            console.log(`Cards flipped`, flipped);
+        socket.on(EVENTS.CLIENT.FLIP_CARDS, (roomId) => {
+            console.log(`Cards flipped`, roomId);
 
             if (!rooms.has(roomId)) {
                 console.log("Room id not found ", roomId);
@@ -169,7 +215,7 @@ const socket = ({ io }: { io: Server }) => {
                 }
                 const roomData: Room = JSON.parse(data);
 
-                roomData.flippedCards = flipped;
+                roomData.flippedCards = true;
                 await redisClient.set(
                     ROOM_KEY + roomId,
                     JSON.stringify(roomData),
@@ -177,7 +223,12 @@ const socket = ({ io }: { io: Server }) => {
                     1000 * 60 * 60 * 24 * 1
                 ); // 1 day
 
-                socket.broadcast.emit(EVENTS.SERVER.FLIP_CARDS, roomId);
+                console.log(EVENTS.SERVER.FLIP_CARDS, roomId);
+
+                
+                socket.broadcast
+                    .to(roomId)
+                    .emit(EVENTS.SERVER.FLIP_CARDS, roomId);
             });
         });
     });

@@ -1,8 +1,8 @@
 {
     "playedCards": [
-        {"player": "Michal 1", "card": "20", "story": "Story 1"},
-        {"player": "Michal 2", "card": "40", "story": "Story 1"},
-        {"player": "Michal 3", "card": "80", "story": "Story 1"}
+        {"username": "Michal 1", "userId": "1", "card": "20", "story": "Story 1"},
+        {"username": "Michal 2", "userId": "2", "card": "40", "story": "Story 1"},
+        {"username": "Michal 3", "userId": "3", "card": "80", "story": "Story 1"}
     ],
     "deck": [
         2,

@@ -1,5 +1,6 @@
 type PlayedCard = {
-    player: string;
+    username: string;
+    userId: string;
     card: string;
     story: string;
 };

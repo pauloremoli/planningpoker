@@ -6,6 +6,7 @@ import {
     useEffect,
     useState,
 } from "react";
+import { useSocket } from "../socket/SocketContext";
 
 type UserData = {
     username: string;
@@ -33,12 +34,6 @@ export default function AppProvider(props: UserData) {
     const [userId, setUserId] = useState(props.userId);
     const [roomId, setRoomId] = useState<string>("");
     const [story, setStory] = useState<string>("");
-
-    useEffect(() => {
-        localStorage.setItem("username", username);
-        console.log("Username changed:", username);
-        
-    }, [username]);
 
     return (
         <AppContext.Provider

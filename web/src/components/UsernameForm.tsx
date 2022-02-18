@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useSocket } from "../socket/SocketContext";
 import Button from "./Button";
 
 type InputForm = {
@@ -15,13 +16,19 @@ const UsernameForm: React.FC<UsernameFormProps> = ({
 }) => {
     const { register, handleSubmit } = useForm<InputForm>();
     const [errors, setErrors] = useState<string>();
+    const { socket } = useSocket();
 
     const onSubmit = (data: InputForm) => {
-        if (!data.username.trim()) {
+        const username = data.username.trim();
+        if (!username) {
             setErrors("Name is required!");
             return;
         }
-        setUsername(data.username);
+
+        socket.auth = { username };
+        socket.connect();
+
+        setUsername(username);
     };
 
     return (
@@ -30,7 +37,7 @@ const UsernameForm: React.FC<UsernameFormProps> = ({
         >
             <h1 className="text-3xl py-14">Hello there</h1>
             <form id="addStoryForm" onSubmit={handleSubmit(onSubmit)}>
-                <div className={"flex flex-col h-full"}> 
+                <div className={"flex flex-col h-full"}>
                     <input
                         id="username"
                         type="text"
