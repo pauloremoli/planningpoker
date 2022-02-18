@@ -71,7 +71,7 @@ const Table: React.FC<TableProps> = ({
 
     useEffect(() => {
         console.log("Played cards updated", playedCards);
-        
+
         setPlayedCards(playedCards);
     }, [playedCards]);
 
@@ -81,9 +81,33 @@ const Table: React.FC<TableProps> = ({
         };
     }, []);
 
+    const clearPlayedCards = () => {
+        const clearedCards = playedCards.map((playedCard) => {
+            playedCard.card = "";
+            return playedCard;
+        });
+
+        setPlayedCards(clearedCards);
+    };
+    const resetCards = () => {
+        if (isCardFlipped) {
+            flipCard();
+        }
+        clearPlayedCards();
+    };
+
     const handleFlip = () => {
         socket.emit(EVENTS.CLIENT.FLIP_CARDS, roomId);
         flipCard();
+    };
+
+    const handleReset = () => {
+        socket.emit(EVENTS.CLIENT.RESET_CARDS, roomId);
+        resetCards();
+    };
+
+    const handleNext = () => {
+        socket.emit(EVENTS.CLIENT.NEXT_STORY, roomId);
     };
 
     return (
@@ -97,11 +121,17 @@ const Table: React.FC<TableProps> = ({
                         Flip
                     </Button>
 
-                    <Button className="h-16 w-72 mt-16 mx-8 rounded-xl p-4 text-xl font-semibold bg-slate-700 shadow-sm shadow-black hover:scale-110 hover:bg-slate-600">
+                    <Button
+                        className="h-16 w-72 mt-16 mx-8 rounded-xl p-4 text-xl font-semibold bg-slate-700 shadow-sm shadow-black hover:scale-110 hover:bg-slate-600"
+                        onClick={handleReset}
+                    >
                         Reset
                     </Button>
 
-                    <Button className="h-16 w-72 mt-16 mx-8 rounded-xl p-4 text-xl font-semibold bg-slate-700 shadow-sm shadow-black hover:scale-110 hover:bg-slate-600">
+                    <Button
+                        className="h-16 w-72 mt-16 mx-8 rounded-xl p-4 text-xl font-semibold bg-slate-700 shadow-sm shadow-black hover:scale-110 hover:bg-slate-600"
+                        onClick={handleNext}
+                    >
                         Next
                     </Button>
                 </div>
@@ -149,7 +179,6 @@ const Table: React.FC<TableProps> = ({
                         </div>
                     );
                 })}
-
             </div>
         </div>
     );
