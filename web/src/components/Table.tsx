@@ -144,18 +144,12 @@ const Table: React.FC<TableProps> = ({
                                 id={"card" + index}
                                 setSelected={selectCard}
                                 isSelected={selectedCard === value.toString()}
+                                isDisabled={isCardFlipped}
                             />
                         </div>
                     );
                 })}
 
-                <Card
-                    value={"?"}
-                    flipped={true}
-                    id={"card_any"}
-                    setSelected={selectCard}
-                    isSelected={selectedCard === "?"}
-                />
             </div>
         </div>
     );

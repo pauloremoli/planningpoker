@@ -1,4 +1,4 @@
-import React, { useReducer, useState } from "react";
+import React from "react";
 
 interface CardProps {
     value: string | null;
@@ -7,6 +7,7 @@ interface CardProps {
     setSelected?: any;
     isSelected: boolean;
     selectionEnabled?: boolean;
+    isDisabled?: boolean;
 }
 
 const Card: React.FC<CardProps> = ({
@@ -15,6 +16,7 @@ const Card: React.FC<CardProps> = ({
     id,
     setSelected = () => {},
     isSelected,
+    isDisabled = false,
     selectionEnabled = true,
 }) => {
     let cardColor = "bg-blue-600";
@@ -22,8 +24,14 @@ const Card: React.FC<CardProps> = ({
     if (!flipped) {
         cardColor = value ? "bg-green-700" : "bg-gray-200";
     }
+
     if (isSelected) {
         cardColor = "bg-blue-500 border-2";
+    }
+
+    if (isDisabled) {
+        cardColor = "bg-gray-700 ";
+        selectionEnabled = false;
     }
 
     return (
