@@ -48,7 +48,6 @@ const Table: React.FC<TableProps> = ({
         let button = e.target as HTMLInputElement;
 
         console.log("selectedCard", selectedCard, "clicked", button.id);
-        
 
         if (selectedCard === button.id) {
             setSelectedCard("");
@@ -65,7 +64,7 @@ const Table: React.FC<TableProps> = ({
         );
 
         const updatedCards: PlayedCard[] = cards.map((playedCard) => {
-            return playedCard.username === username
+            return playedCard.userId === userId
                 ? {
                       card: selectedCard,
                       username,
@@ -102,7 +101,6 @@ const Table: React.FC<TableProps> = ({
     };
 
     const resetCards = () => {
-
         socket.emit(EVENTS.CLIENT.RESET_CARDS, roomId);
         if (isCardFlipped) {
             flipCard();
@@ -125,7 +123,7 @@ const Table: React.FC<TableProps> = ({
     };
 
     return (
-        <div className="flex flex-col justify-between p-8 text-xl w-full">
+        <div className="flex flex-col p-8 text-xl w-full">
             {isRoomOwner && (
                 <div className="flex justify-center mb-16">
                     <Button
@@ -150,7 +148,7 @@ const Table: React.FC<TableProps> = ({
                     </Button>
                 </div>
             )}
-            <div className="w-full ">
+            <div className="w-full">
                 <div className="flex w-full flex-wrap justify-center">
                     {cards.map((playedCard: PlayedCard, index: number) => {
                         return (
@@ -177,7 +175,7 @@ const Table: React.FC<TableProps> = ({
 
             <div
                 key="cards"
-                className="flex w-full flex-wrap justify-center align-bottom"
+                className="flex w-full flex-wrap justify-center mt-auto"
             >
                 {deck.map((value: number, index: number) => {
                     return (

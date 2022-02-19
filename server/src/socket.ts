@@ -171,7 +171,7 @@ const socket = ({ io }: { io: Server }) => {
 
                     roomData.playedCards = roomData.playedCards.filter(
                         (playedCard: PlayedCard) =>
-                            playedCard.username !== username
+                            playedCard.userId !== userId
                     );
                     roomData.playedCards.push(playedCard);
 
