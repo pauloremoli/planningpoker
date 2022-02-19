@@ -35,6 +35,30 @@ export default function AppProvider(props: UserData) {
     const [roomId, setRoomId] = useState<string>("");
     const [story, setStory] = useState<string>("");
 
+    useEffect(() => {
+        const user = localStorage.getItem("username");
+        console.log("LOCAL STORAGE username", user);
+        
+        if (user) {
+            setUsername(user);
+        }
+
+        const id = localStorage.getItem("userId");
+
+        console.log("LOCAL STORAGE id", id);
+        if (id) {
+            setUserId(id);
+        }
+    }, []);
+
+    useEffect(() => {
+        localStorage.setItem("username", username);
+    }, [username]);
+
+    useEffect(() => {
+        localStorage.setItem("userId", userId);
+    }, [userId]);
+
     return (
         <AppContext.Provider
             value={{

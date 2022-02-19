@@ -9,11 +9,10 @@ import Welcome from "./pages/welcome";
 import reportWebVitals from "./reportWebVitals";
 import SocketContext from "./socket/SocketContext";
 
-const username = localStorage.getItem("username");
 
 ReactDOM.render(
     <React.StrictMode>
-        <AppContext userId="" username={username ? username : ""}>
+        <AppContext userId="" username={""}>
             <SocketContext>
                 <BrowserRouter>
                     <Routes>

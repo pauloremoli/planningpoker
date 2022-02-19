@@ -44,8 +44,6 @@ const addNewPlayerToRoom = async (
         "ex",
         1000 * 60 * 60 * 24 * 1
     ); // 1 day
-
-    socket.emit(EVENTS.SERVER.JOINED_ROOM, roomData, userId);
 };
 
 const isPlayerAlreadyInTheRoom = (
@@ -76,7 +74,6 @@ const updatePlayerInfo = (roomId: string, userId: string, socket: Socket) => {
 
     console.log("Update room", rooms.get(roomId));
 };
-
 
 const socket = ({ io }: { io: Server }) => {
     console.log(`Sockets enabled`);
@@ -121,6 +118,8 @@ const socket = ({ io }: { io: Server }) => {
                     return;
                 }
 
+                console.log("USER_ID", userId);
+
                 socket.join(roomId);
                 const roomData: Room = JSON.parse(data);
 
@@ -135,6 +134,7 @@ const socket = ({ io }: { io: Server }) => {
                     addNewPlayerToRoom(roomId, socket, userId, roomData);
                 }
 
+                socket.emit(EVENTS.SERVER.JOINED_ROOM, roomData, userId);
                 console.log(EVENTS.SERVER.JOINED_ROOM, userId);
                 socket.broadcast
                     .to(roomId)
@@ -225,10 +225,52 @@ const socket = ({ io }: { io: Server }) => {
 
                 console.log(EVENTS.SERVER.FLIP_CARDS, roomId);
 
-                
                 socket.broadcast
                     .to(roomId)
                     .emit(EVENTS.SERVER.FLIP_CARDS, roomId);
+            });
+        });
+
+        /*
+         * Reset cards
+         */
+        socket.on(EVENTS.CLIENT.RESET_CARDS, (roomId) => {
+            console.log(`Cards reseted`, roomId);
+
+            if (!rooms.has(roomId)) {
+                console.log("Room id not found ", roomId);
+
+                socket.broadcast.emit(EVENTS.SERVER.ROOM_CLOSED, roomId);
+
+                return;
+            }
+
+            redisClient.get(ROOM_KEY + roomId).then(async (data) => {
+                if (!data) {
+                    console.error(`Room id (${roomId}) not found`);
+                    return;
+                }
+                const roomData: Room = JSON.parse(data);
+
+                roomData.playedCards = roomData.playedCards.map(
+                    (playedCard) => {
+                        playedCard.card = "";
+                        return playedCard;
+                    }
+                );
+
+                await redisClient.set(
+                    ROOM_KEY + roomId,
+                    JSON.stringify(roomData),
+                    "ex",
+                    1000 * 60 * 60 * 24 * 1
+                ); // 1 day
+
+                console.log(EVENTS.SERVER.RESET_CARDS, roomId);
+
+                socket.broadcast
+                    .to(roomId)
+                    .emit(EVENTS.SERVER.RESET_CARDS, roomId);
             });
         });
     });

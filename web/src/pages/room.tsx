@@ -90,8 +90,18 @@ const RoomPage: React.FC = () => {
             return;
         }
 
-        console.log("EVENTS.CLIENT.JOIN_ROOM", username);
-        socket.emit(EVENTS.CLIENT.JOIN_ROOM, roomIdFromParams, userId);
+        let id = userId;
+        if (!userId) {
+            id = localStorage.getItem("userId") || "";
+
+            console.log("READ FROM LOCAL STORAGE id", id);
+            if (id) {
+                setUserId(id);
+            }
+        }
+
+        console.log("EVENTS.CLIENT.JOIN_ROOM", username, id);
+        socket.emit(EVENTS.CLIENT.JOIN_ROOM, roomIdFromParams, id);
 
         setRoomId(roomIdFromParams!);
     }, []);

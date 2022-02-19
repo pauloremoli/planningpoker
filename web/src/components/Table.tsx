@@ -1,5 +1,4 @@
-import React, { useContext, useEffect, useReducer, useState } from "react";
-import { io } from "socket.io-client";
+import React, { useEffect, useReducer, useState } from "react";
 import PlayedCard from "../models/PlayedCard";
 import EVENTS from "../socket/events";
 import { useSocket } from "../socket/SocketContext";
@@ -41,22 +40,34 @@ const Table: React.FC<TableProps> = ({
         flipCard();
     });
 
+    socket.on(EVENTS.SERVER.RESET_CARDS, () => {
+        resetCards();
+    });
+
     const selectCard = (e: React.MouseEvent<HTMLElement>) => {
         let button = e.target as HTMLInputElement;
 
-        setSelectedCard(button.id);
+        console.log("selectedCard", selectedCard, "clicked", button.id);
+        
+
+        if (selectedCard === button.id) {
+            setSelectedCard("");
+        } else {
+            setSelectedCard(button.id);
+        }
+
         socket.emit(
             EVENTS.CLIENT.SELECTED_CARD,
             roomId,
             userId,
             username,
-            button.id
+            selectedCard
         );
 
         const updatedCards: PlayedCard[] = cards.map((playedCard) => {
             return playedCard.username === username
                 ? {
-                      card: button.id,
+                      card: selectedCard,
                       username,
                       userId,
                       story: playedCard.story,
@@ -89,7 +100,10 @@ const Table: React.FC<TableProps> = ({
 
         setPlayedCards(clearedCards);
     };
+
     const resetCards = () => {
+
+        socket.emit(EVENTS.CLIENT.RESET_CARDS, roomId);
         if (isCardFlipped) {
             flipCard();
         }

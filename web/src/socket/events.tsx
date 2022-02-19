@@ -21,7 +21,8 @@ const EVENTS = {
         ROOM_MESSAGE: "ROOM_MESSAGE",
         NEW_STORY: "NEW_STORY",
         SELECTED_CARD: "SELECTED_CARD",
-        FLIP_CARDS: "FLIP_CARDS"
+        FLIP_CARDS: "FLIP_CARDS",
+        RESET_CARDS: "RESET_CARDS",
     },
 };
 

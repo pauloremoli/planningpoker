@@ -30,7 +30,7 @@ const Card: React.FC<CardProps> = ({
     }
 
     if (isDisabled) {
-        cardColor = "bg-gray-700 ";
+        cardColor = "bg-gray-700 border-black";
         selectionEnabled = false;
     }
 
