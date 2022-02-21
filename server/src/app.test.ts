@@ -27,7 +27,7 @@ describe("Create room tests", () => {
     test("/createRoom should create a room with given deck configuration", () => {
         return supertest(app)
             .post("/createRoom")
-            .send({ deck: [0, 1, 2, 3] })
+            .send({ deck: ["0", "1", "2", "3"] })
             .then((response: any) => {
                 expect(response.statusCode).toBe(200);
                 expect(response.body).toHaveProperty("roomId");

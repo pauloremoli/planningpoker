@@ -7,23 +7,22 @@ import Button from "./Button";
 import Card from "./Card";
 
 interface TableProps {
-    playedCards: PlayedCard[];
-    deck: number[];
+    cards: PlayedCard[];
+    deck: string[];
     roomOwner: boolean;
+    nextStory?: () => void;
 }
 
 const Table: React.FC<TableProps> = ({
-    playedCards,
+    cards,
     deck,
     roomOwner,
+    nextStory = () => {}
 }: TableProps) => {
     const [isRoomOwner, setRoomOwner] = useState(roomOwner);
-    const [cards, setPlayedCards] = useState<PlayedCard[]>(playedCards);
+    const [playedCards, setPlayedCards] = useState<PlayedCard[]>(cards);
     const [selectedCard, setSelectedCard] = useState("");
-    const [isCardFlipped, flipCard] = useReducer(
-        (isFlipped) => !isFlipped,
-        false
-    );
+    const [isCardFlipped, setFlippedCard] = useState(false);
     const { socket } = useSocket();
     const { roomId, username, userId } = useAppContext();
 
@@ -37,7 +36,7 @@ const Table: React.FC<TableProps> = ({
     });
 
     socket.on(EVENTS.SERVER.FLIP_CARDS, (room: string) => {
-        flipCard();
+        setFlippedCard(!isCardFlipped);
     });
 
     socket.on(EVENTS.SERVER.RESET_CARDS, () => {
@@ -48,9 +47,11 @@ const Table: React.FC<TableProps> = ({
         let button = e.target as HTMLInputElement;
 
         console.log("selectedCard", selectedCard, "clicked", button.id);
+        let clickedCard = button.id;
 
         if (selectedCard === button.id) {
             setSelectedCard("");
+            clickedCard = "";
         } else {
             setSelectedCard(button.id);
         }
@@ -62,11 +63,11 @@ const Table: React.FC<TableProps> = ({
             username,
             selectedCard
         );
-
-        const updatedCards: PlayedCard[] = cards.map((playedCard) => {
+        
+        const updatedCards: PlayedCard[] = playedCards.map((playedCard) => {
             return playedCard.userId === userId
                 ? {
-                      card: selectedCard,
+                      card: clickedCard,
                       username,
                       userId,
                       story: playedCard.story,
@@ -82,8 +83,8 @@ const Table: React.FC<TableProps> = ({
     useEffect(() => {
         console.log("Played cards updated", playedCards);
 
-        setPlayedCards(playedCards);
-    }, [playedCards]);
+        setPlayedCards(cards);
+    }, [cards]);
 
     useEffect(() => {
         return () => {
@@ -101,16 +102,16 @@ const Table: React.FC<TableProps> = ({
     };
 
     const resetCards = () => {
-        socket.emit(EVENTS.CLIENT.RESET_CARDS, roomId);
         if (isCardFlipped) {
-            flipCard();
+            console.log("isCardFlipped", isCardFlipped);
+            setFlippedCard(!isCardFlipped);;
         }
         clearPlayedCards();
     };
 
     const handleFlip = () => {
         socket.emit(EVENTS.CLIENT.FLIP_CARDS, roomId);
-        flipCard();
+        setFlippedCard(!isCardFlipped);;
     };
 
     const handleReset = () => {
@@ -128,6 +129,7 @@ const Table: React.FC<TableProps> = ({
                 <div className="flex justify-center mb-16">
                     <Button
                         onClick={handleFlip}
+                        disabled={isCardFlipped}
                         className="h-16 w-72 mt-16 mx-8 rounded-xl p-4 text-xl font-semibold bg-slate-700 shadow-sm shadow-black hover:scale-110 hover:bg-slate-600"
                     >
                         Flip
@@ -150,7 +152,7 @@ const Table: React.FC<TableProps> = ({
             )}
             <div className="w-full">
                 <div className="flex w-full flex-wrap justify-center">
-                    {cards.map((playedCard: PlayedCard, index: number) => {
+                    {playedCards.map((playedCard: PlayedCard, index: number) => {
                         return (
                             <div
                                 key={"div_player" + index}
@@ -177,16 +179,17 @@ const Table: React.FC<TableProps> = ({
                 key="cards"
                 className="flex w-full flex-wrap justify-center mt-auto"
             >
-                {deck.map((value: number, index: number) => {
+                {deck.map((value: string, index: number) => {
                     return (
                         <div key={"div_cards" + index}>
                             <Card
-                                value={value.toString()}
+                                value={value}
                                 flipped={true}
                                 id={"card" + index}
                                 setSelected={selectCard}
-                                isSelected={selectedCard === value.toString()}
+                                isSelected={selectedCard === value}
                                 isDisabled={isCardFlipped}
+                                selectionEnabled={true}
                             />
                         </div>
                     );

@@ -1,36 +1,51 @@
 {
     "playedCards": [
-        {"username": "Michal 1", "userId": "1", "card": "20", "story": "Story 1"},
-        {"username": "Michal 2", "userId": "2", "card": "40", "story": "Story 1"},
-        {"username": "Michal 3", "userId": "3", "card": "80", "story": "Story 1"}
-    ],
-    "deck": [
-        2,
-        4,
-        8,
-        16,
-        24,
-        32,
-        40,
-        48,
-        64,
-        72,
-        80
-    ],
-    "stories": [
         {
-            "name": "Story 1",
-            "description" : "Some nice description",
-            "points": 0
+            "username": "Michal 1",
+            "userId": "1",
+            "card": "20",
+            "story": "Story 1"
         },
         {
+            "username": "Michal 2",
+            "userId": "2",
+            "card": "40",
+            "story": "Story 1"
+        },
+        {
+            "username": "Michal 3",
+            "userId": "3",
+            "card": "80",
+            "story": "Story 1"
+        }
+    ],
+    "deck": [
+        "2",
+        "4",
+        "8",
+        "16",
+        "24",
+        "32",
+        "40",
+        "48",
+        "64",
+        "72",
+        "80"
+    ],
+    "currentStory": {
+        "name": "Story 1",
+        "description": "Some nice description",
+        "points": 0
+    },
+    "nextStories": [
+        {
             "name": "Story 2",
-            "description" : "Some nice description",
+            "description": "Some nice description",
             "points": 0
         },
         {
             "name": "Story 3",
-            "description" : "Some nice description",
+            "description": "Some nice description",
             "points": 0
         }
     ]

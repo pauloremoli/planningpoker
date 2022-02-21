@@ -1,27 +1,34 @@
 import React, { useEffect, useState } from "react";
 import Story from "../models/Story";
 
-
 interface StoriesProps {
-    stories: Story[];
+    next?: Story[];
+    voted?: Story[];
+    current?: Story;
 }
 
-const Stories: React.FC<StoriesProps> = ({ stories }) => {
-    const [currentStory, setCurrentStory] = useState<Story | null>();
-    const [nextStories, setNextStories] = useState<Story[]>();
-    const [votedStories, setVotedStories] = useState<Story[]>();
+const Stories: React.FC<StoriesProps> = ({ next, current, voted }) => {
+    const [currentStory, setCurrentStory] = useState<Story | undefined>(
+        current
+    );
+    const [nextStories, setNextStories] = useState<Story[] | undefined>(next);
+    const [votedStories, setVotedStories] = useState<Story[] | undefined>(
+        voted
+    );
 
     useEffect(() => {
-        if (!stories) return;
-        console.log(stories);
+        setCurrentStory(current);
+    }, [current]);
 
-        setCurrentStory(stories[0]);
-        if (stories.length > 1) {
-            setNextStories(stories.filter((item, index) => index !== 0));
-        }
-    }, [stories]);
+    useEffect(() => {
+        setNextStories(next);
+    }, [next]);
 
-    if (stories.length === 0)
+    useEffect(() => {
+        setVotedStories(voted);
+    }, [voted]);
+
+    if (!currentStory)
         return (
             <>
                 <div className="py-10 text-xl flex flex-col justify-between h-full">

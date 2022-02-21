@@ -12,7 +12,7 @@ configure({ adapter: new Adapter() });
 describe("Table tests", () => {
     test("renders control buttons when user is the room owner", () => {
         render(
-            <Table playedCards={data.playedCards} deck={data.deck} roomOwner={true} />
+            <Table cards={data.playedCards} deck={data.deck} roomOwner={true} />
         );
         const flipElement = screen.getByText("Flip");
         expect(flipElement).toBeInTheDocument();
@@ -24,7 +24,7 @@ describe("Table tests", () => {
 
     test("does not render control buttons when user is not room owner", () => {
         render(
-            <Table playedCards={data.playedCards} deck={data.deck} roomOwner={false} />
+            <Table cards={data.playedCards} deck={data.deck} roomOwner={false} />
         );
         const flipElement = screen.queryByText("Flip");
         expect(flipElement).toBeNull();
@@ -36,7 +36,7 @@ describe("Table tests", () => {
 
     test("renders players", () => {
         render(
-            <Table playedCards={data.playedCards} deck={data.deck} roomOwner={false} />
+            <Table cards={data.playedCards} deck={data.deck} roomOwner={false} />
         );
 
         const playedCards = data.playedCards;
@@ -49,13 +49,13 @@ describe("Table tests", () => {
 
     test("renders cards", () => {
         render(
-            <Table playedCards={data.playedCards} deck={data.deck} roomOwner={false} />
+            <Table cards={data.playedCards} deck={data.deck} roomOwner={false} />
         );
 
         const cards = data.deck;
 
-        cards.map((card: number) => {
-            const cardElement = screen.getByText(card.toString());
+        cards.map((card: string) => {
+            const cardElement = screen.getByText(card);
             expect(cardElement).toBeInTheDocument();
         });
 

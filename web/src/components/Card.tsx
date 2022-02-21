@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 interface CardProps {
     value: string | null;
@@ -19,29 +19,41 @@ const Card: React.FC<CardProps> = ({
     isDisabled = false,
     selectionEnabled = true,
 }) => {
-    let cardColor = "bg-blue-600";
+    const [selection, setSelectionEnabled] = useState(selectionEnabled);
+    const [cardColor, setCardColor] = useState("bg-blue-600");
 
-    if (!flipped) {
-        cardColor = value ? "bg-green-700" : "bg-gray-200";
-    }
+    useEffect(() => {
+        if (!flipped) {
+            setCardColor(value ? "bg-green-700" : "bg-gray-200");
+            return;
+        }
 
-    if (isSelected) {
-        cardColor = "bg-blue-500 border-2";
-    }
+        if (isSelected) {
+            setCardColor("bg-green-600 border-2");
+            return;
+        }
 
-    if (isDisabled) {
-        cardColor = "bg-gray-700 border-black";
-        selectionEnabled = false;
-    }
+        if (isDisabled) {
+            setCardColor("bg-gray-700 border-black");
+            return;
+        }
+
+        setCardColor("bg-blue-600");
+    }, [value, isDisabled, isSelected, flipped]);
+
+    useEffect(() => {
+        setSelectionEnabled(selectionEnabled);
+        console.log(selection);
+    }, [selectionEnabled]);
 
     return (
         <button
             key={id}
             id={value!}
             className={`mr-2 mt-2 h-24 w-14 rounded-xl flex ${cardColor} ${
-                selectionEnabled
-                    ? "hover:bg-blue-500 hover:border-2 "
-                    : "cursor-auto "
+                selection && !isDisabled
+                    ? "hover:bg-green-500 hover:border-2 "
+                    : "cursor-not-allowed"
             } text-3xl justify-center  p-2 items-center`}
             onClick={selectionEnabled ? setSelected : () => {}}
         >

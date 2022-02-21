@@ -11,23 +11,22 @@ import { MemoryRouter } from "react-router-dom";
 configure({ adapter: new Adapter() });
 
 test("renders sidebar stories", () => {
-    const [firstStory, ...others] = data.stories;
     render(
         <MemoryRouter>
-            <Sidebar stories={data.stories} roomOwner={false} />
+            <Sidebar current={data.currentStory} next={data.nextStories} roomOwner={false} />
         </MemoryRouter>
     );
 
     const votingNowElement = screen.getByText("Voting now:");
     expect(votingNowElement).toBeInTheDocument();
 
-    const firstStoryElement = screen.getByText(firstStory.name);
+    const firstStoryElement = screen.getByText(data.currentStory.name);
     expect(firstStoryElement).toBeInTheDocument();
 
-    const secondStoryElement = screen.getByText(others[0].name);
+    const secondStoryElement = screen.getByText(data.nextStories[0].name);
     expect(secondStoryElement).toBeInTheDocument();
 
-    const thirdStoryElement = screen.getByText(others[1].name);
+    const thirdStoryElement = screen.getByText(data.nextStories[1].name);
     expect(thirdStoryElement).toBeInTheDocument();
 });
 
@@ -35,7 +34,7 @@ test("click on Add Story button renders CreateStory component", async () => {
     let wrapper = mount(
         <AppProvider username={""} userId={""}>
             <MemoryRouter>
-                <Sidebar stories={data.stories} roomOwner={true} />
+                <Sidebar current={data.currentStory} roomOwner={true} />
             </MemoryRouter>
         </AppProvider>
     );

@@ -5,30 +5,29 @@ import Stories from "./Sidebar";
 import { MemoryRouter } from "react-router-dom";
 
 test("renders sprint stories", () => {
-    const [firstStory, ...others] = data.stories;
     render(
         <MemoryRouter>
-            <Stories stories={data.stories} roomOwner={false} />
+            <Stories current={data.currentStory} roomOwner={false} />
         </MemoryRouter>
     );
 
     const votingNowElement = screen.getByText("Voting now:");
     expect(votingNowElement).toBeInTheDocument();
 
-    const firstStoryElement = screen.getByText(firstStory.name);
+    const firstStoryElement = screen.getByText(data.currentStory.name);
     expect(firstStoryElement).toBeInTheDocument();
 
-    const secondStoryElement = screen.getByText(others[0].name);
+    const secondStoryElement = screen.getByText(data.nextStories[0].name);
     expect(secondStoryElement).toBeInTheDocument();
 
-    const thirdStoryElement = screen.getByText(others[1].name);
+    const thirdStoryElement = screen.getByText(data.nextStories[1].name);
     expect(thirdStoryElement).toBeInTheDocument();
 });
 
 test("renders no stories when given empty data", () => {
     render(
         <MemoryRouter>
-            <Stories stories={[]} roomOwner={false} />
+            <Stories roomOwner={false} />
         </MemoryRouter>
     );
 
@@ -39,7 +38,7 @@ test("renders no stories when given empty data", () => {
 test("renders add story button when is room owner", () => {
     render(
         <MemoryRouter>
-            <Stories stories={[]} roomOwner={true} />
+            <Stories roomOwner={true} />
         </MemoryRouter>
     );
 
@@ -50,7 +49,7 @@ test("renders add story button when is room owner", () => {
 test("does not render add story button when is not room owner", () => {
     render(
         <MemoryRouter>
-            <Stories stories={[]} roomOwner={false} />
+            <Stories roomOwner={false} />
         </MemoryRouter>
     );
 

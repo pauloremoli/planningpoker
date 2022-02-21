@@ -3,10 +3,12 @@ import Story from "./Story";
 
 type TRoom = {
     roomId: string;
-    deck: number[];
-    stories: Story[];
+    deck: string[];
+    votedStories: Story[];
+    nextStories: Story[];
+    currentStory: Story;
     roomOwner: string;
     playedCards: PlayedCard[];
-}
+};
 
 export default TRoom;

@@ -23,7 +23,8 @@ const EVENTS = {
         NEW_STORY: "NEW_STORY",
         SELECTED_CARD: "SELECTED_CARD",
         FLIP_CARDS: "FLIP_CARDS",
-        RESET_CARDS: "RESET_CARDS"
+        RESET_CARDS: "RESET_CARDS",
+        NEXT_STORY: "NEXT_STORY"
     },
 };
 

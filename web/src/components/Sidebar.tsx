@@ -9,23 +9,23 @@ import { useSocket } from "../socket/SocketContext";
 import EVENTS from "../socket/events";
 
 interface SidebarProps {
-    stories?: Story[];
+    next?: Story[];
+    current?: Story;
     roomOwner: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({
-    stories: pStories = [],
-    roomOwner,
-}) => {
+const Sidebar: React.FC<SidebarProps> = ({ current, next, roomOwner }) => {
     const [isRoomOwner, setRoomOwner] = useState(false);
     const [showAddStory, setShowAddStory] = useState(false);
-    const [stories, setStories] = useState<Story[]>(pStories);
-    const {socket} = useSocket();
+    const [nextStories, setNextStories] = useState<Story[] | undefined>(next);
+    const [currentStory, setCurrentStory] = useState<Story | undefined>(
+        current
+    );
+    const { socket } = useSocket();
 
     Modal.setAppElement(document.getElementById("root")!);
 
     Modal!.defaultStyles!.overlay!.backgroundColor = "rgb(0, 0, 0, 0.75)";
-
 
     socket.on(EVENTS.SERVER.NEW_STORY, (story: Story) => {
         console.log("New story added: ", story);
@@ -58,7 +58,15 @@ const Sidebar: React.FC<SidebarProps> = ({
     };
 
     const addStory = (name: string, description: string) => {
-        setStories([...stories, { name, description, points: 0 }]);
+        if (!currentStory) {
+            setCurrentStory({ name, description, points: 0 });
+        } else {
+            setNextStories(
+                nextStories
+                    ? [...nextStories, { name, description, points: 0 }]
+                    : [{ name, description, points: 0 }]
+            );
+        }
     };
 
     return (
@@ -68,7 +76,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     Planning Poker
                 </h1>
             </Link>
-            <Stories stories={stories} />
+            <Stories current={currentStory} next={nextStories} />
 
             {isRoomOwner && (
                 <>

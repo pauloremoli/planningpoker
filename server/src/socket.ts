@@ -1,10 +1,10 @@
 import { Server } from "socket.io";
 import { v4 } from "uuid";
 import { ROOM_KEY } from "./constants";
+import redisClient from "./redis";
 import EVENTS from "./types/Events";
 import PlayedCard from "./types/PlayedCard";
 import Room from "./types/Room";
-import redisClient from "./redis";
 import Socket from "./types/Socket";
 
 type Player = {
@@ -164,14 +164,17 @@ const socket = ({ io }: { io: Server }) => {
                 redisClient.get(ROOM_KEY + roomId).then(async (data) => {
                     if (!data) {
                         console.error(`Room id (${roomId}) not found`);
+                        socket.broadcast.emit(
+                            EVENTS.SERVER.ROOM_CLOSED,
+                            roomId
+                        );
                         return;
                     }
                     const roomData: Room = JSON.parse(data);
                     const playedCard: PlayedCard = { userId, username, card };
 
                     roomData.playedCards = roomData.playedCards.filter(
-                        (playedCard: PlayedCard) =>
-                            playedCard.userId !== userId
+                        (playedCard: PlayedCard) => playedCard.userId !== userId
                     );
                     roomData.playedCards.push(playedCard);
 
@@ -211,9 +214,57 @@ const socket = ({ io }: { io: Server }) => {
             redisClient.get(ROOM_KEY + roomId).then(async (data) => {
                 if (!data) {
                     console.error(`Room id (${roomId}) not found`);
+                    socket.broadcast.emit(EVENTS.SERVER.ROOM_CLOSED, roomId);
                     return;
                 }
                 const roomData: Room = JSON.parse(data);
+
+                let count = 0;
+                let min: PlayedCard[] = [];
+                let max: PlayedCard[] = [];
+
+                const total = roomData.playedCards.reduce(
+                    (sum: number, currentValue) => {
+                        if (currentValue.card && currentValue.card !== "?") {
+                            count++;
+                            if (
+                                min.length > 0 &&
+                                min[0].card > currentValue.card
+                            ) {
+                                min = [currentValue];
+                            } else if (
+                                min.length > 0 &&
+                                min[0].card === currentValue.card
+                            ) {
+                                min.push(currentValue);
+                            } else {
+                                min = [currentValue];
+                            }
+
+                            if (max.length > 0 && max[0].card < currentValue.card) {
+                                max = [currentValue];
+                            } else if (
+                                max.length > 0 &&
+                                max[0].card === currentValue.card
+                            ) {
+                                max.push(currentValue);
+                            } else {
+                                max = [currentValue];
+                            }
+
+                            return sum + parseFloat(currentValue.card);
+                        } else {
+                            return sum;
+                        }
+                    },
+                    0
+                );
+
+                const average = total / count;
+
+                console.log("min:", min);
+                console.log("max:", max);
+                console.log("average:", average);
 
                 roomData.flippedCards = true;
                 await redisClient.set(
@@ -227,7 +278,11 @@ const socket = ({ io }: { io: Server }) => {
 
                 socket.broadcast
                     .to(roomId)
-                    .emit(EVENTS.SERVER.FLIP_CARDS, roomId);
+                    .emit(EVENTS.SERVER.FLIP_CARDS, roomId, {
+                        average,
+                        min,
+                        max,
+                    });
             });
         });
 
@@ -248,6 +303,7 @@ const socket = ({ io }: { io: Server }) => {
             redisClient.get(ROOM_KEY + roomId).then(async (data) => {
                 if (!data) {
                     console.error(`Room id (${roomId}) not found`);
+                    socket.broadcast.emit(EVENTS.SERVER.ROOM_CLOSED, roomId);
                     return;
                 }
                 const roomData: Room = JSON.parse(data);
@@ -270,7 +326,44 @@ const socket = ({ io }: { io: Server }) => {
 
                 socket.broadcast
                     .to(roomId)
-                    .emit(EVENTS.SERVER.RESET_CARDS, roomId);
+                    .emit(EVENTS.SERVER.RESET_CARDS);
+            });
+        });
+
+        /*
+         * Next story
+         */
+        socket.on(EVENTS.CLIENT.NEXT_STORY, (roomId) => {
+            console.log(`Next story`, roomId);
+
+            if (!rooms.has(roomId)) {
+                console.log("Room id not found ", roomId);
+
+                socket.broadcast.emit(EVENTS.SERVER.ROOM_CLOSED, roomId);
+
+                return;
+            }
+
+            redisClient.get(ROOM_KEY + roomId).then(async (data) => {
+                if (!data) {
+                    console.error(`Room id (${roomId}) not found`);
+                    socket.broadcast.emit(EVENTS.SERVER.ROOM_CLOSED, roomId);
+                    return;
+                }
+                const roomData: Room = JSON.parse(data);
+
+                await redisClient.set(
+                    ROOM_KEY + roomId,
+                    JSON.stringify(roomData),
+                    "ex",
+                    1000 * 60 * 60 * 24 * 1
+                ); // 1 day
+
+                console.log(EVENTS.SERVER.NEXT_STORY, roomId);
+
+                socket.broadcast
+                    .to(roomId)
+                    .emit(EVENTS.SERVER.NEXT_STORY, roomId);
             });
         });
     });

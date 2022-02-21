@@ -3,9 +3,9 @@ import express, { Router } from "express";
 import { v4 } from "uuid";
 import { io } from "./app";
 import { ROOM_KEY } from "./constants";
+import redis from "./redis";
 import EVENTS from "./types/Events";
 import Room from "./types/Room";
-import redis from "./redis";
 
 const app = (module.exports = express());
 const routes = Router();
@@ -66,8 +66,10 @@ app.post("/createRoom", jsonParser, async (req, res) => {
         deck: params.deck,
         roomOwner: userId,
         flippedCards: false,
-        stories: [],
+        votedStories: [],
+        nextStories: [],
         playedCards: [],
+        currentStory: undefined,
     };
 
     await redis.set(
@@ -113,8 +115,15 @@ app.post("/addStory", jsonParser, (req, res) => {
                     .status(500)
                     .send({ error: `Room id (${req.query.roomId}) not found` });
             }
-            const data = JSON.parse(roomParams);
-            data.stories = [...data.stories, story];
+            const data: Room = JSON.parse(roomParams);
+
+            if (!data.currentStory) {
+                data.currentStory = story;
+            } else {
+                data.nextStories = data.nextStories
+                    ? [...data.nextStories, story]
+                    : [story];
+            }
 
             redis.set(
                 ROOM_KEY + roomId,
@@ -123,7 +132,7 @@ app.post("/addStory", jsonParser, (req, res) => {
                 1000 * 60 * 60 * 24 * 1
             ); // 1 day
 
-            io.to(roomId).emit(EVENTS.SERVER.NEW_STORY, story, roomId);
+            io.to(roomId).emit(EVENTS.SERVER.NEW_STORY, data);
 
             return res.json(data);
         })

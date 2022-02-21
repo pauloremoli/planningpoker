@@ -39,6 +39,10 @@ const RoomPage: React.FC = () => {
         },
     };
 
+    const nextStory = () => {
+        
+    }
+
     socket.on(EVENTS.SERVER.ROOM_CLOSED, (roomId: string) => {
         console.log("Room is closed: ", roomId);
         setIsRoomClosed(true);
@@ -153,13 +157,14 @@ const RoomPage: React.FC = () => {
                 {!isLoading && (
                     <>
                         <Sidebar
-                            stories={data!.stories}
+                            current={data!.currentStory}
                             roomOwner={isRoomOwner}
                         />
                         <Table
-                            playedCards={data!.playedCards}
+                            cards={data!.playedCards}
                             deck={data!.deck}
                             roomOwner={isRoomOwner}
+                            nextStory={nextStory}
                         />
 
                         <Chat />
