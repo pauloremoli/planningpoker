@@ -70,7 +70,7 @@ const Sidebar: React.FC<SidebarProps> = ({ current, next, roomOwner }) => {
     };
 
     return (
-        <div className="w-80 py-10 pl-8 bg-slate-800 flex flex-col justify-between h-screen">
+        <div className="w-3/12 py-10 pl-8 bg-slate-800 flex flex-col justify-between h-screen">
             <Link to="/">
                 <h1 id="title" className="text-4xl font-bold">
                     Planning Poker

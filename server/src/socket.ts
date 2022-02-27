@@ -185,8 +185,6 @@ const socket = ({ io }: { io: Server }) => {
                         1000 * 60 * 60 * 24 * 1
                     ); // 1 day
 
-                    console.log("socket.broadcast.emit SELECTED_CARD");
-                    console.log(roomData.playedCards);
                     socket.broadcast
                         .to(roomId)
                         .emit(

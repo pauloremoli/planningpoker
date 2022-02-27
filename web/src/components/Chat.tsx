@@ -4,7 +4,7 @@ interface ChatProps {}
 
 const Chat: React.FC<ChatProps> = () => {
     return (
-        <div className="w-80 py-10 pl-8 bg-slate-800 flex flex-col  h-screen justify-between">
+        <div className="w-3/12 py-10 pl-8 bg-slate-800 flex flex-col  h-screen justify-between">
             <h1 id="chatTitle" className="font-semibold text-xl">Chat</h1>
 
             <input
