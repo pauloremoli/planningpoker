@@ -49,7 +49,7 @@ const Card: React.FC<CardProps> = ({
 		<button
 			key={id}
 			id={value!}
-			className={`mr-2 mt-2 h-24 w-14 rounded-xl flex ${cardColor} ${
+			className={`h-24 w-14 rounded-xl flex ${cardColor} ${
 				selection && !isDisabled
 					? "hover:bg-green-500 hover:border-2 "
 					: "cursor-not-allowed"

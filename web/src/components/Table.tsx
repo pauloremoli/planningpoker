@@ -11,6 +11,7 @@ interface TableProps {
 	deck: string[];
 	roomOwner: boolean;
 	nextStory?: () => void;
+	playedCard?: string;
 }
 
 const Table: React.FC<TableProps> = ({
@@ -18,13 +19,14 @@ const Table: React.FC<TableProps> = ({
 	deck,
 	roomOwner,
 	nextStory = () => {},
+	playedCard = "",
 }: TableProps) => {
+	const { roomId, username, userId } = useAppContext();
 	const [isRoomOwner, setRoomOwner] = useState(roomOwner);
 	const [playedCards, setPlayedCards] = useState<PlayedCard[]>(cards);
-	const [selectedCard, setSelectedCard] = useState("");
+	const [selectedCard, setSelectedCard] = useState<string>(playedCard);
 	const [isCardFlipped, setFlippedCard] = useState(false);
 	const { socket } = useSocket();
-	const { roomId, username, userId } = useAppContext();
 
 	useEffect(() => {
 		setRoomOwner(roomOwner);
@@ -109,6 +111,7 @@ const Table: React.FC<TableProps> = ({
 			console.log("isCardFlipped", isCardFlipped);
 			setFlippedCard(!isCardFlipped);
 		}
+		setSelectedCard("");
 		clearPlayedCards();
 	};
 
@@ -160,7 +163,7 @@ const Table: React.FC<TableProps> = ({
 							return (
 								<div
 									key={"div_player" + index}
-									className="m-8 mt-8 flex flex-col basis-20 items-center"
+									className="m-8 mt-8 flex flex-col basis-20 items-center gap-2"
 								>
 									<h3
 										key={"h1_player" + index}
@@ -185,7 +188,7 @@ const Table: React.FC<TableProps> = ({
 
 			<div
 				key="cards"
-				className="flex w-full flex-wrap justify-center mt-auto"
+				className="flex w-full flex-wrap justify-center mt-auto gap-2"
 			>
 				{deck.map((value: string, index: number) => {
 					return (

@@ -1,12 +1,11 @@
+import { render, screen } from "@testing-library/react";
+import Adapter from "@wojtekmaj/enzyme-adapter-react-17";
+import { configure } from "enzyme";
 import React from "react";
 import data from "../data.json";
-import { render, screen } from "@testing-library/react";
-import Table from "./Table";
-
-import { configure } from "enzyme";
-import Adapter from "@wojtekmaj/enzyme-adapter-react-17";
 import PlayedCard from "../models/PlayedCard";
 import AppProvider from "./AppContext";
+import Table from "./Table";
 
 configure({ adapter: new Adapter() });
 
