@@ -6,60 +6,85 @@ import Table from "./Table";
 import { configure } from "enzyme";
 import Adapter from "@wojtekmaj/enzyme-adapter-react-17";
 import PlayedCard from "../models/PlayedCard";
+import AppProvider from "./AppContext";
 
 configure({ adapter: new Adapter() });
 
 describe("Table tests", () => {
-    test("renders control buttons when user is the room owner", () => {
-        render(
-            <Table cards={data.playedCards} deck={data.deck} roomOwner={true} />
-        );
-        const flipElement = screen.getByText("Flip");
-        expect(flipElement).toBeInTheDocument();
-        const resetElement = screen.getByText("Reset");
-        expect(resetElement).toBeInTheDocument();
-        const nextElement = screen.getByText("Next");
-        expect(nextElement).toBeInTheDocument();
-    });
+	test("renders control buttons when user is the room owner", () => {
+		render(
+			<AppProvider userId="1" username="User 1">
+				<Table
+					cards={data.playedCards}
+					deck={data.deck}
+					roomOwner={true}
+				/>
+			</AppProvider>
+		);
+		const flipElement = screen.getByText("Flip");
+		expect(flipElement).toBeInTheDocument();
+		const resetElement = screen.getByText("Reset");
+		expect(resetElement).toBeInTheDocument();
+		const nextElement = screen.getByText("Next");
+		expect(nextElement).toBeInTheDocument();
+	});
 
-    test("does not render control buttons when user is not room owner", () => {
-        render(
-            <Table cards={data.playedCards} deck={data.deck} roomOwner={false} />
-        );
-        const flipElement = screen.queryByText("Flip");
-        expect(flipElement).toBeNull();
-        const resetElement = screen.queryByText("Reset");
-        expect(resetElement).toBeNull();
-        const nextElement = screen.queryByText("Next");
-        expect(nextElement).toBeNull();
-    });
+	test("does not render control buttons when user is not room owner", () => {
+		render(
+			<AppProvider userId="1" username="User 1">
+				<Table
+					cards={data.playedCards}
+					deck={data.deck}
+					roomOwner={false}
+				/>
+			</AppProvider>
+		);
+		const flipElement = screen.queryByText("Flip");
+		expect(flipElement).toBeNull();
+		const resetElement = screen.queryByText("Reset");
+		expect(resetElement).toBeNull();
+		const nextElement = screen.queryByText("Next");
+		expect(nextElement).toBeNull();
+	});
 
-    test("renders players", () => {
-        render(
-            <Table cards={data.playedCards} deck={data.deck} roomOwner={false} />
-        );
+	test("renders players", () => {
+		render(
+			<AppProvider userId="1" username="User 1">
+				<Table
+					cards={data.playedCards}
+					deck={data.deck}
+					roomOwner={false}
+				/>
+			</AppProvider>
+		);
 
-        const playedCards = data.playedCards;
+		const playedCards = data.playedCards;
 
-        playedCards.map((playedCard: PlayedCard) => {
-            const playerElement = screen.getByText(playedCard.username);
-            expect(playerElement).toBeInTheDocument();
-        });
-    });
+		playedCards.map((playedCard: PlayedCard) => {
+			const playerElement = screen.getByText(playedCard.username);
+			expect(playerElement).toBeInTheDocument();
+		});
+	});
 
-    test("renders cards", () => {
-        render(
-            <Table cards={data.playedCards} deck={data.deck} roomOwner={false} />
-        );
+	test("renders cards", () => {
+		render(
+			<AppProvider userId="1" username="User 1">
+				<Table
+					cards={data.playedCards}
+					deck={data.deck}
+					roomOwner={false}
+				/>
+			</AppProvider>
+		);
 
-        const cards = data.deck;
+		const cards = data.deck;
 
-        cards.map((card: string) => {
-            const cardElement = screen.getByText(card);
-            expect(cardElement).toBeInTheDocument();
-        });
+		cards.map((card: string) => {
+			const cardElement = screen.getByText(card);
+			expect(cardElement).toBeInTheDocument();
+		});
 
-        const questionMarkElement = screen.getByText("?");
-        expect(questionMarkElement).toBeInTheDocument();
-    });
+		const questionMarkElement = screen.getByText("?");
+		expect(questionMarkElement).toBeInTheDocument();
+	});
 });

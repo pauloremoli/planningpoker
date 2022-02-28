@@ -43,7 +43,6 @@ const Card: React.FC<CardProps> = ({
 
 	useEffect(() => {
 		setSelectionEnabled(selectionEnabled);
-		console.log(selection);
 	}, [selectionEnabled]);
 
 	return (

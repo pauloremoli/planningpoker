@@ -1,19 +1,19 @@
 {
     "playedCards": [
         {
-            "username": "Michal 1",
+            "username": "User 1",
             "userId": "1",
             "card": "20",
             "story": "Story 1"
         },
         {
-            "username": "Michal 2",
+            "username": "User 2",
             "userId": "2",
             "card": "40",
             "story": "Story 1"
         },
         {
-            "username": "Michal 3",
+            "username": "User 3",
             "userId": "3",
             "card": "80",
             "story": "Story 1"
@@ -30,7 +30,8 @@
         "48",
         "64",
         "72",
-        "80"
+        "80",
+        "?"
     ],
     "currentStory": {
         "name": "Story 1",

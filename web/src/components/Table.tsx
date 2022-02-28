@@ -188,9 +188,6 @@ const Table: React.FC<TableProps> = ({
 				className="flex w-full flex-wrap justify-center mt-auto"
 			>
 				{deck.map((value: string, index: number) => {
-					const isSelected = selectedCard == value;
-					console.log(`${value} ${selectedCard} ${isSelected}`);
-
 					return (
 						<div key={"div_cards" + index}>
 							<Card
@@ -198,7 +195,7 @@ const Table: React.FC<TableProps> = ({
 								flipped={true}
 								id={"card" + index}
 								setSelected={selectCard}
-								isSelected={isSelected}
+								isSelected={selectedCard == value}
 								isDisabled={isCardFlipped}
 								selectionEnabled={true}
 							/>

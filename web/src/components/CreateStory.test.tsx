@@ -1,99 +1,90 @@
-import { waitFor } from "@testing-library/react";
-import Adapter from "@wojtekmaj/enzyme-adapter-react-17";
-import { configure, mount, ReactWrapper } from "enzyme";
-import mockAxios from "jest-mock-axios";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { act } from "react-dom/test-utils";
 import { MemoryRouter } from "react-router-dom";
 import SERVER from "../api/constants";
 import AppProvider from "./AppContext";
 import CreateStory from "./CreateStory";
+import axios from "axios";
 
-const chageInputValue = (
-    wrapper: ReactWrapper<any, Readonly<{}>, React.Component<{}, {}, any>>,
-    id: string,
-    value: string
-) => {
-    wrapper.find(id).simulate("change", { target: { value } });
-};
-
-configure({ adapter: new Adapter() });
+jest.mock("axios");
 
 describe("Test create story", () => {
-    afterEach(() => {
-        mockAxios.reset();
-    });
+	test("click on Add Story button renders CreateStory component", async () => {
+		const roomId = "1";
+		render(
+			<MemoryRouter>
+				<AppProvider username={"User 1"} userId={"1"} roomId={roomId}>
+					<CreateStory />
+				</AppProvider>
+			</MemoryRouter>
+		);
 
-    test("renders form for creating a story", async () => {
-        let wrapper = mount(
-            <AppProvider username={""} userId={""} roomId={"1"}>
-                <CreateStory />
-            </AppProvider>
-        );
+		fireEvent.input(screen.getByTestId("storyName"), {
+			target: {
+				value: "Story 1",
+			},
+		});
 
-        expect(wrapper.find("#storyName").props().placeholder).toContain(
-            "Name"
-        );
-        expect(wrapper.find("#description").props().placeholder).toContain(
-            "Description"
-        );
+		fireEvent.input(screen.getByTestId("description"), {
+			target: {
+				value: "Task description",
+			},
+		});
 
-        expect(wrapper.find("#addButton").text()).toContain("Add");
-    });
+		const resp = {};
+		axios.post = jest.fn().mockResolvedValue(resp);
 
-    test("click on Add Story button renders CreateStory component", async () => {
-        const roomId = "1";
-        const wrapper = mount(
-            <MemoryRouter>
-                <AppProvider username={""} userId={""} roomId={roomId}>
-                    <CreateStory />
-                </AppProvider>
-            </MemoryRouter>
-        );
+		fireEvent.submit(screen.getByTestId("addButton"));
 
-        chageInputValue(wrapper, "#storyName", "Story 1");
-        chageInputValue(wrapper, "#description", "Do your job");
+		expect(axios.post).toHaveBeenCalledWith(SERVER + "/addStory", {
+			roomId,
+			story: {
+				name: "Story 1",
+				description: "Task description",
+				points: 0,
+			},
+		});
+	});
 
-        const resp = {};
-        mockAxios.post.mockResolvedValueOnce(resp);
+	test("renders error message when create room fails", async () => {
+		const roomId = "1";
+		render(
+			<MemoryRouter>
+				<AppProvider username={"User 1"} userId={"1"} roomId={roomId}>
+					<CreateStory />
+				</AppProvider>
+			</MemoryRouter>
+		);
 
-        await act(async () => {
-            wrapper.find("form").simulate("submit");
-        });
+		fireEvent.input(screen.getByTestId("storyName"), {
+			target: {
+				value: "Story 1",
+			},
+		});
 
-        expect(mockAxios.post).toHaveBeenCalledWith(SERVER + "/addStory", {
-            name: "Story 1",
-            description: "Do your job",
-        });
-    });
+		fireEvent.input(screen.getByTestId("description"), {
+			target: {
+				value: "Task description",
+			},
+		});
 
-    test("renders error message when create room fails", async () => {
-        const roomId = "1";
-        let wrapper = mount(
-            <AppProvider username={""} userId={""} roomId={roomId}>
-                <CreateStory />
-            </AppProvider>
-        );
+		axios.post = jest.fn().mockRejectedValueOnce({ error: "exception" });
 
-        mockAxios.get.mockRejectedValueOnce({ error: "exception" });
+		fireEvent.submit(screen.getByTestId("addButton"));
 
-        expect(wrapper.contains("#errorMessage")).toBeFalsy();
+		expect(axios.post).toHaveBeenCalledWith(SERVER + "/addStory", {
+			roomId,
+			story: {
+				name: "Story 1",
+				description: "Do your job",
+				points: 0,
+			},
+		});
 
-        chageInputValue(wrapper, "#storyName", "Story 1");
-        chageInputValue(wrapper, "#description", "Do your job");
-
-        await act(async () => {
-            wrapper.find("form").simulate("submit");
-        });
-        
-        expect(mockAxios.post).toHaveBeenCalledWith(SERVER + "/addStory", {
-            name: "Story 1",
-            description: "Do your job",
-        });
-
-        await waitFor(() => {
-            expect(wrapper.find("#errorMessage").text()).toBe(
-                "Something went wrong, please try again!"
-            );
-        });
-    });
+		await waitFor(() => {
+			expect(
+				screen.getByText("Something went wrong, please try again!")
+			).toBeInTheDocument();
+		});
+	});
 });
