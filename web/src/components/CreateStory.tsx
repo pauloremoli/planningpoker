@@ -2,7 +2,6 @@ import axios from "axios";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { AiOutlineClose } from "react-icons/ai";
-import { post } from "../api/api";
 import SERVER from "../api/constants";
 import Story from "../models/Story";
 import { useAppContext } from "./AppContext";
