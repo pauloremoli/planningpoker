@@ -4,7 +4,7 @@ import { useAppContext } from "../components/AppContext";
 import Chat from "../components/Chat";
 import Sidebar from "../components/Sidebar";
 import Table from "../components/Table";
-import TRoom from "../models/Room";
+import TRoom from "../models/TRoom";
 import EVENTS from "../socket/events";
 import { useSocket } from "../socket/SocketContext";
 import Modal from "react-modal";

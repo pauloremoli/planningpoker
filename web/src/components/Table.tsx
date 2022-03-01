@@ -1,10 +1,13 @@
 import React, { useEffect, useReducer, useState } from "react";
+import { isMinusToken } from "typescript";
 import PlayedCard from "../models/PlayedCard";
+import TStatistics from "../models/TStatistics";
 import EVENTS from "../socket/events";
 import { useSocket } from "../socket/SocketContext";
 import { useAppContext } from "./AppContext";
 import Button from "./Button";
 import Card from "./Card";
+import Score from "./Score";
 
 interface TableProps {
 	cards: PlayedCard[];
@@ -26,6 +29,7 @@ const Table: React.FC<TableProps> = ({
 	const [playedCards, setPlayedCards] = useState<PlayedCard[]>(cards);
 	const [selectedCard, setSelectedCard] = useState<string>(playedCard);
 	const [isCardFlipped, setFlippedCard] = useState(false);
+	const [statistics, setStatistics] = useState<TStatistics>();
 	const { socket } = useSocket();
 
 	useEffect(() => {
@@ -37,9 +41,15 @@ const Table: React.FC<TableProps> = ({
 		setPlayedCards(playedCards);
 	});
 
-	socket.on(EVENTS.SERVER.FLIP_CARDS, (room: string) => {
-		setFlippedCard(!isCardFlipped);
-	});
+	socket.on(
+		EVENTS.SERVER.FLIP_CARDS,
+		(average: number, min: PlayedCard[], max: PlayedCard[]) => {
+			console.log(EVENTS.SERVER.FLIP_CARDS, average, min, max);
+
+			setFlippedCard(!isCardFlipped);
+			setStatistics({ average, min, max });
+		}
+	);
 
 	socket.on(EVENTS.SERVER.RESET_CARDS, () => {
 		resetCards();
@@ -185,6 +195,12 @@ const Table: React.FC<TableProps> = ({
 					)}
 				</div>
 			</div>
+
+			{statistics && (
+				<>
+					<Score statistics={statistics} />
+				</>
+			)}
 
 			<div
 				key="cards"
