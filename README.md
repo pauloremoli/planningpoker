@@ -4,7 +4,7 @@ Planning Poker is a consensus-based estimating technique that development teams 
 These estimations are based on the entire team’s input and consensus, it's achieved by playing numbered cards face-down to the table.
 The cards are revealed, and the estimates are then discussed until a consensus reached.
 
-# Tech stack:
+# Tech stack
 
 Backend:
  * Node JS
