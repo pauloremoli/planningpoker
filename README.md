@@ -12,7 +12,7 @@ Backend:
  * Express
  * Socket.io
 
-Front-end:
+Frontend:
  * React
  * Socket.io
  * Tailwind CSS. 
